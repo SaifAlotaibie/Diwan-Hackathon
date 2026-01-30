@@ -7,5 +7,6 @@ export default defineConfig({
     host: true, // Listen on all addresses
     port: 5173,
     strictPort: true
+    // allowedHosts removed to allow all connections on local network
   }
 })

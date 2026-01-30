@@ -1,237 +1,89 @@
-# WebRTC 1-to-1 Meeting App with Local AI
+# 🎥 WebRTC Video Call App
 
-A simple peer-to-peer video meeting application with local AI-powered transcription and analysis.
+تطبيق بسيط لمكالمات الفيديو بين شخصين باستخدام WebRTC
 
-## 🎯 Features
+## 📋 المتطلبات
 
-- ✅ 1-to-1 video calling
-- ✅ Real-time audio/video (WebRTC P2P)
-- ✅ Camera/Microphone controls
-- ✅ Local audio recording per participant
-- ✅ AI transcription (Whisper)
-- ✅ Meeting summary & key points (Local LLM)
-- ✅ Speaker identification
+- Node.js (v18 أو أحدث)
+- npm
 
-## 🏗️ Architecture
+## 🚀 طريقة التشغيل
 
-```
-┌─────────────┐         ┌─────────────┐
-│  Browser 1  │◄───────►│  Browser 2  │
-│ (React App) │   P2P   │ (React App) │
-└──────┬──────┘ WebRTC  └──────┬──────┘
-       │                        │
-       │      Signaling         │
-       └────►┌──────────┐◄──────┘
-             │ Socket.IO│
-             │  Server  │
-             └────┬─────┘
-                  │
-             ┌────▼─────┐
-             │ Backend  │
-             │ (Node.js)│
-             └────┬─────┘
-                  │
-         ┌────────┴────────┐
-         │                 │
-    ┌────▼────┐      ┌─────▼────┐
-    │ Whisper │      │  Ollama  │
-    │  (STT)  │      │  (LLM)   │
-    └─────────┘      └──────────┘
-```
+### 1. تثبيت المكتبات
 
-## 📋 Prerequisites
-
-1. **Node.js** (v18+)
-   ```bash
-   node --version
-   ```
-
-2. **Python 3.8+** (for Whisper)
-   ```bash
-   python --version
-   ```
-
-3. **Ollama** (for local LLM)
-   - Download: https://ollama.ai/download
-   - Install llama2:
-   ```bash
-   ollama pull llama2
-   ```
-
-4. **Whisper.cpp** or **faster-whisper**
-   ```bash
-   pip install faster-whisper
-   ```
-
-## 🚀 Quick Start
-
-### 1. Install Dependencies
-
-**Backend:**
 ```bash
+# Backend
 cd backend
 npm install
-```
 
-**Frontend:**
-```bash
-cd frontend
+# Frontend
+cd ../frontend
 npm install
 ```
 
-### 2. Start Services
+### 2. تشغيل السيرفرات
 
-**Terminal 1 - Backend:**
+افتح **terminal واحد** للـ Backend:
+
 ```bash
 cd backend
 npm start
 ```
-Server runs on: `http://localhost:3001`
 
-**Terminal 2 - Frontend:**
+افتح **terminal ثاني** للـ Frontend:
+
 ```bash
 cd frontend
 npm run dev
 ```
-App runs on: `http://localhost:5173`
 
-### 3. Start Ollama (Terminal 3)
-```bash
-ollama serve
-```
+## 🧪 طريقة الاستخدام
 
-## 🧪 Testing
+### للاختبار على نفس الجهاز:
 
-### Desktop Testing
-1. Open `http://localhost:5173` in Chrome
-2. Open another tab: `http://localhost:5173`
-3. Enter same room ID in both
-4. Click "Join Room"
+1. افتح Chrome
+2. **Tab 1**: اذهب إلى `http://localhost:5173`
+   - أدخل اسمك
+   - أدخل رقم الغرفة (مثال: room123)
+   - اضغط Join Room
+   
+3. **Tab 2**: افتح تبويب جديد `http://localhost:5173`
+   - أدخل اسم مختلف
+   - أدخل نفس رقم الغرفة (room123)
+   - اضغط Join Room
 
-### Mobile Testing (Same Network)
-1. Find your PC's local IP:
-   ```bash
-   ipconfig  # Windows
-   ifconfig  # Mac/Linux
-   ```
-2. On mobile browser: `http://YOUR_IP:5173`
-3. On PC browser: `http://localhost:5173`
-4. Use same room ID
+### للاختبار من جهازين على نفس الشبكة:
 
-## 📱 Usage Flow
+1. **الجهاز الأول** (اللي شغال عليه السيرفر):
+   - افتح: `http://localhost:5173`
 
-1. **Join Room**
-   - Enter room ID (e.g., "room123")
-   - Click "Join Room"
-   - Allow camera/microphone access
+2. **الجهاز الثاني**:
+   - افتح: `http://[IP-ADDRESS]:5173`
+   - (استبدل [IP-ADDRESS] برقم IP الجهاز الأول)
 
-2. **During Call**
-   - Toggle camera on/off
-   - Toggle microphone on/off
-   - Chat with peer
+**ملاحظة**: لازم تستخدم نفس رقم الغرفة في الجهازين!
 
-3. **End Meeting**
-   - Click "End Meeting"
-   - Audio automatically uploaded
-   - Wait for AI analysis
+## 🎮 المميزات
 
-4. **View Results**
-   - Transcription per speaker
-   - Meeting summary
-   - Key points
+- ✅ مكالمة فيديو بين شخصين (P2P)
+- ✅ تشغيل/إيقاف الكاميرا
+- ✅ تشغيل/إيقاف المايكروفون
+- ✅ اتصال مباشر بدون خوادم وسيطة
 
-## 🔧 Troubleshooting
+## 📱 ملاحظات
 
-### Camera/Mic not working
-- Check browser permissions
-- Use HTTPS or localhost only
-- Restart browser
+- الجهازين لازم يكونون على نفس الشبكة
+- استخدم Chrome أو Firefox للحصول على أفضل أداء
+- السيرفر يشتغل على:
+  - Backend: `http://localhost:3001`
+  - Frontend: `http://localhost:5173`
 
-### Peer connection fails
-- Check firewall settings
-- Verify STUN server accessibility
-- Check console for errors
+## 🛠️ التقنيات المستخدمة
 
-### AI processing fails
-- Ensure Ollama is running: `ollama list`
-- Verify faster-whisper: `pip list | grep faster-whisper`
-- Check backend logs
-
-## 📂 Project Structure
-
-```
-webrtc-meeting-app/
-├── frontend/           # React + Vite app
-│   ├── src/
-│   │   ├── App.jsx    # Main component
-│   │   ├── WebRTC.jsx # WebRTC logic
-│   │   └── main.jsx
-│   └── package.json
-├── backend/            # Node.js server
-│   ├── server.js      # Express + Socket.IO
-│   ├── ai.js          # Whisper + LLM
-│   └── package.json
-└── README.md
-```
-
-## 🎨 UI Features
-
-- Clean, minimal interface
-- Real-time connection status
-- Audio level indicators
-- Participant badges
-- Meeting analytics display
-
-## 🔒 Security Notes
-
-- **Local only** - no data sent to cloud
-- WebRTC P2P - direct browser connection
-- Audio files stored temporarily
-- STUN servers used only for NAT traversal
-
-## 📝 API Endpoints
-
-### WebSocket (Socket.IO)
-- `join-room` - Join a meeting room
-- `offer` - Send WebRTC offer
-- `answer` - Send WebRTC answer
-- `ice-candidate` - Exchange ICE candidates
-
-### REST API
-- `POST /upload-audio` - Upload recorded audio
-- `POST /analyze` - Process meeting data
-
-## 🚧 Limitations
-
-- Maximum 2 participants per room
-- No chat feature
-- No screen sharing
-- No recording playback
-- Requires modern browser with WebRTC support
-
-## 📊 Browser Compatibility
-
-✅ Chrome/Edge 90+  
-✅ Firefox 88+  
-✅ Safari 15+  
-✅ Mobile browsers (iOS Safari, Chrome Android)
-
-## 🔄 Future Enhancements (Out of Scope)
-
-- ❌ Multi-party calls
-- ❌ Screen sharing
-- ❌ Chat
-- ❌ Recording playback
-- ❌ Cloud deployment
-
-## 📞 Support
-
-For issues:
-1. Check browser console
-2. Verify all services running
-3. Test with simple room ID
-4. Check network connectivity
+- **Frontend**: React + Vite
+- **Backend**: Node.js + Express + Socket.IO
+- **WebRTC**: للاتصال P2P المباشر
 
 ---
 
-**Built for Hackathon** | **MVP Version** | **Local AI Powered** 🚀
+**تم إنشاء المشروع لـ Diwan Hackathon**
