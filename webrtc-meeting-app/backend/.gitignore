@@ -1,0 +1,9 @@
+node_modules/
+uploads/
+transcripts/
+*.log
+.env
+*.webm
+*.wav
+*.mp3
+transcribe_temp.py
