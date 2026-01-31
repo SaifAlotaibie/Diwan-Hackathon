@@ -6,6 +6,7 @@ function App() {
   const [roomId, setRoomId] = useState('')
   const [joined, setJoined] = useState(false)
   const [userName, setUserName] = useState('')
+  const [userRole, setUserRole] = useState('participant')
 
   const handleJoin = () => {
     if (roomId.trim() && userName.trim()) {
@@ -35,6 +36,26 @@ function App() {
             onKeyPress={(e) => e.key === 'Enter' && handleJoin()}
           />
           
+          <select
+            value={userRole}
+            onChange={(e) => setUserRole(e.target.value)}
+            style={{
+              padding: '12px',
+              fontSize: '16px',
+              border: '2px solid #ddd',
+              borderRadius: '8px',
+              marginBottom: '15px',
+              width: '100%',
+              textAlign: 'right',
+              direction: 'rtl'
+            }}
+          >
+            <option value="judge">قاضي</option>
+            <option value="lawyer">محامي</option>
+            <option value="party">طرف في القضية</option>
+            <option value="participant">مشارك</option>
+          </select>
+          
           <input
             type="text"
             placeholder="رقم الجلسة (مثال: session123)"
@@ -63,6 +84,7 @@ function App() {
     <WebRTCMeeting 
       roomId={roomId} 
       userName={userName}
+      userRole={userRole}
       onLeave={() => setJoined(false)}
     />
   )

@@ -5,7 +5,12 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-// const { transcribeAudio, analyzeTranscript } = require('./ai'); // Disabled for now
+
+// Session Content Report module
+const { initializeSessionMetadata, generateSessionContentReport } = require('./sessionReport');
+
+// Dress Code Check module (MVP feature)
+const { checkDressCode } = require('./dressCodeCheck');
 
 const app = express();
 const server = http.createServer(app);
@@ -46,53 +51,123 @@ const upload = multer({ storage: storage });
 // Store active rooms
 const rooms = new Map();
 
+// Store active sessions metadata (in-memory for current sessions)
+const activeSessions = new Map();
+
 // Socket.IO connection handling
 io.on('connection', (socket) => {
   console.log('✅ New client connected:', socket.id);
 
-  socket.on('join-room', (roomId) => {
-    console.log(`📞 ${socket.id} joining room: ${roomId}`);
+  socket.on('join-room', ({ roomId, participantId, role }) => {
+    console.log(`📞 ${socket.id} joining room: ${roomId} as ${role || 'participant'}`);
     
     // Check if room exists
     if (!rooms.has(roomId)) {
-      rooms.set(roomId, new Set());
+      rooms.set(roomId, new Map());
+      
+      // Initialize session metadata
+      const sessionMetadata = initializeSessionMetadata(roomId, []);
+      activeSessions.set(roomId, sessionMetadata);
+      console.log(`📋 Session metadata initialized for room: ${roomId}`);
     }
     
     const room = rooms.get(roomId);
     
-    // Limit to 2 participants
-    if (room.size >= 2) {
-      socket.emit('room-full');
-      console.log(`❌ Room ${roomId} is full`);
-      return;
+    // Many-to-many: NO LIMIT on participants
+    socket.join(roomId);
+    
+    // Store participant info in room Map
+    room.set(socket.id, {
+      socketId: socket.id,
+      participantId: participantId,
+      role: role || 'participant',
+      joinedAt: new Date().toISOString()
+    });
+    
+    socket.roomId = roomId;
+    socket.participantId = participantId;
+    socket.role = role || 'participant';
+    
+    // Add participant to session metadata
+    const sessionMetadata = activeSessions.get(roomId);
+    if (sessionMetadata) {
+      sessionMetadata.participants.push({
+        participantId: participantId,
+        role: role || 'participant',
+        joined_at: new Date().toISOString(),
+        socketId: socket.id
+      });
     }
     
-    socket.join(roomId);
-    room.add(socket.id);
-    socket.roomId = roomId;
+    // Get list of all participants with their info
+    const participants = Array.from(room.values());
     
-    // Notify others in room
-    socket.to(roomId).emit('user-joined', socket.id);
+    // Notify others in room about new participant
+    socket.to(roomId).emit('user-joined', {
+      socketId: socket.id,
+      participantId: participantId,
+      role: role || 'participant'
+    });
     
-    // Send current room participants
-    socket.emit('room-users', Array.from(room));
+    // Send current room participants to new joiner
+    socket.emit('room-users', participants);
     
     console.log(`✅ ${socket.id} joined ${roomId}. Total: ${room.size}`);
   });
 
-  socket.on('offer', ({ offer, roomId }) => {
-    console.log(`📤 Offer from ${socket.id} in ${roomId}`);
-    socket.to(roomId).emit('offer', { offer, from: socket.id });
+  socket.on('offer', ({ offer, roomId, to }) => {
+    console.log(`📤 Offer from ${socket.id} to ${to} in ${roomId}`);
+    socket.to(to).emit('offer', { offer, from: socket.id });
   });
 
-  socket.on('answer', ({ answer, roomId }) => {
-    console.log(`📥 Answer from ${socket.id} in ${roomId}`);
-    socket.to(roomId).emit('answer', { answer, from: socket.id });
+  socket.on('answer', ({ answer, roomId, to }) => {
+    console.log(`📥 Answer from ${socket.id} to ${to} in ${roomId}`);
+    socket.to(to).emit('answer', { answer, from: socket.id });
   });
 
-  socket.on('ice-candidate', ({ candidate, roomId }) => {
-    console.log(`🧊 ICE candidate from ${socket.id}`);
-    socket.to(roomId).emit('ice-candidate', { candidate, from: socket.id });
+  socket.on('ice-candidate', ({ candidate, roomId, to }) => {
+    console.log(`🧊 ICE candidate from ${socket.id} to ${to}`);
+    socket.to(to).emit('ice-candidate', { candidate, from: socket.id });
+  });
+
+  // Active speaker detection
+  socket.on('active-speaker', ({ roomId, participantId, role }) => {
+    socket.to(roomId).emit('active-speaker', {
+      socketId: socket.id,
+      participantId,
+      role
+    });
+  });
+
+  // Unified session termination
+  socket.on('end-session', ({ roomId }) => {
+    console.log(`🛑 Session ended by ${socket.id} in room: ${roomId}`);
+    
+    // Broadcast to ALL participants in the room
+    io.to(roomId).emit('session-ended', {
+      endedBy: socket.participantId || 'Unknown',
+      role: socket.role || 'participant',
+      timestamp: new Date().toISOString()
+    });
+    
+    // Clean up room after a short delay (allow clients to process)
+    setTimeout(() => {
+      const room = rooms.get(roomId);
+      if (room) {
+        room.clear();
+        rooms.delete(roomId);
+        console.log(`🗑️ Room ${roomId} cleared after session end`);
+      }
+    }, 2000);
+  });
+
+  // Active speaker detection
+  socket.on('active-speaker', ({ roomId, participantId, role }) => {
+    socket.to(roomId).emit('active-speaker', {
+      socketId: socket.id,
+      participantId,
+      role
+    });
   });
 
   socket.on('disconnect', () => {
@@ -102,11 +177,22 @@ io.on('connection', (socket) => {
       const room = rooms.get(socket.roomId);
       if (room) {
         room.delete(socket.id);
-        io.to(socket.roomId).emit('user-left', socket.id);
+        io.to(socket.roomId).emit('user-left', {
+          socketId: socket.id,
+          participantId: socket.participantId,
+          role: socket.role
+        });
         
         if (room.size === 0) {
           rooms.delete(socket.roomId);
-          console.log(`🗑️  Room ${socket.roomId} deleted`);
+          
+          // Clean up session metadata when room is empty
+          if (activeSessions.has(socket.roomId)) {
+            activeSessions.delete(socket.roomId);
+            console.log(`🗑️ Session metadata deleted for room: ${socket.roomId}`);
+          }
+          
+          console.log(`🗑️ Room ${socket.roomId} deleted`);
         }
       }
     }
@@ -144,7 +230,64 @@ app.post('/upload-audio', upload.single('audio'), async (req, res) => {
   }
 });
 
-// Analyze meeting (transcribe + summarize)
+// Generate Session Content Report (NEW FEATURE)
+app.post('/generate-session-report', async (req, res) => {
+  try {
+    const { audioFiles, roomId } = req.body;
+    
+    console.log('📊 Generating Session Content Report...');
+    console.log(`   Room: ${roomId}`);
+    console.log(`   Audio files: ${audioFiles.length}`);
+    
+    // Get session metadata
+    let sessionMetadata = activeSessions.get(roomId);
+    
+    if (!sessionMetadata) {
+      // If session not found, create basic metadata
+      console.warn(`⚠️ Session metadata not found for room: ${roomId}, creating basic metadata`);
+      sessionMetadata = initializeSessionMetadata(roomId, audioFiles.map(f => ({
+        participantId: f.participantId,
+        role: f.role || 'participant'
+      })));
+    }
+    
+    // Generate the report using batch audio files
+    const report = await generateSessionContentReport(audioFiles, sessionMetadata);
+    
+    // Clean up: Delete audio files after processing
+    console.log('🗑️ Cleaning up audio files...');
+    for (const audioFile of audioFiles) {
+      try {
+        if (fs.existsSync(audioFile.path)) {
+          fs.unlinkSync(audioFile.path);
+          console.log(`   ✅ Deleted: ${audioFile.path}`);
+        }
+      } catch (err) {
+        console.error(`   ❌ Failed to delete ${audioFile.path}:`, err.message);
+      }
+    }
+    
+    // Clean up session metadata after report generation
+    if (activeSessions.has(roomId)) {
+      activeSessions.delete(roomId);
+      console.log(`🗑️ Session metadata cleaned up for room: ${roomId}`);
+    }
+    
+    res.json({
+      success: true,
+      report: report
+    });
+    
+  } catch (error) {
+    console.error('❌ Session report generation error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+});
+
+// Analyze meeting (transcribe + summarize) - LEGACY ENDPOINT
 app.post('/analyze', async (req, res) => {
   try {
     const { audioFiles } = req.body; // Array of {path, participantId}
@@ -223,6 +366,42 @@ app.post('/analyze', async (req, res) => {
   }
 });
 
+// Dress Code Check (MVP Feature - Lawyers Only)
+app.post('/check-dress-code', async (req, res) => {
+  try {
+    const { imageBase64, role } = req.body;
+    
+    if (!imageBase64) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Image data is required' 
+      });
+    }
+    
+    if (!role) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Role is required' 
+      });
+    }
+    
+    console.log('👔 Dress code check request received');
+    console.log(`   Role: ${role}`);
+    
+    // Perform dress code check
+    const result = await checkDressCode(imageBase64, role);
+    
+    res.json(result);
+    
+  } catch (error) {
+    console.error('❌ Dress code check error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+});
+
 // Get active rooms (for debugging)
 app.get('/rooms', (req, res) => {
   const roomList = Array.from(rooms.entries()).map(([roomId, participants]) => ({
@@ -261,9 +440,11 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('🔌 Socket.IO ready for connections');
   console.log('');
   console.log('Endpoints:');
-  console.log(`  GET  /health          - Health check`);
-  console.log(`  GET  /rooms           - Active rooms`);
-  console.log(`  POST /upload-audio    - Upload audio`);
-  console.log(`  POST /analyze         - Analyze meeting`);
+  console.log(`  GET  /health                    - Health check`);
+  console.log(`  GET  /rooms                     - Active rooms`);
+  console.log(`  POST /upload-audio              - Upload audio`);
+  console.log(`  POST /generate-session-report   - Generate Session Content Report`);
+  console.log(`  POST /check-dress-code          - Dress code check (lawyers only)`);
+  console.log(`  POST /analyze                   - Analyze meeting (legacy)`);
   console.log('');
 });
