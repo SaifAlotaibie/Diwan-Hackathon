@@ -124,47 +124,54 @@ ul {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-sm);
 }
 
 .logo {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
+    flex-shrink: 0;
 }
 
 .logo-img {
-    height: 50px;
+    height: 45px;
     width: auto;
 }
 
 .logo-text {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 600;
     color: var(--primary-color);
+    white-space: nowrap;
 }
 
 .nav-menu {
     display: flex;
-    gap: var(--spacing-md);
+    gap: 1.5rem;
     flex: 1;
     justify-content: center;
-    flex-wrap: wrap;
+    align-items: center;
 }
 
 .nav-menu a {
-    color: var(--primary-color);
+    color: var(--black);
     font-weight: 500;
-    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.95rem;
+    padding: var(--spacing-xs) 0.5rem;
     border-radius: var(--radius-md);
     transition: var(--transition);
     white-space: nowrap;
 }
 
-.nav-menu a:hover,
-.nav-menu a.active {
-    color: var(--primary-color-dark);
+.nav-menu a:hover {
+    color: var(--black);
     background-color: var(--gray-50);
+}
+
+.nav-menu a.active {
+    color: var(--black);
+    font-weight: 600;
 }
 
 .nav-actions {
@@ -278,13 +285,13 @@ ul {
 
 .services-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: var(--spacing-lg);
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
 }
 
 .service-card {
     background: var(--white);
-    padding: var(--spacing-xl);
+    padding: 1.5rem;
     border-radius: var(--radius-lg);
     text-align: center;
     box-shadow: var(--shadow-md);
@@ -299,20 +306,23 @@ ul {
 }
 
 .service-icon {
-    font-size: 3rem;
-    margin-bottom: var(--spacing-md);
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
 }
 
 .service-card h3 {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 600;
     color: var(--gray-900);
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
 }
 
 .service-card p {
     color: var(--gray-600);
-    margin-bottom: var(--spacing-md);
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
 }
 
 .service-link {
@@ -321,6 +331,7 @@ ul {
     display: inline-flex;
     align-items: center;
     gap: var(--spacing-xs);
+    font-size: 0.95rem;
 }
 
 .service-link:hover {
