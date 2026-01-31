@@ -246,6 +246,25 @@ io.on('connection', (socket) => {
 
 // REST API Endpoints
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    name: 'Diwan WebRTC Backend',
+    status: 'running',
+    version: '1.0.0',
+    endpoints: {
+      health: 'GET /health',
+      rooms: 'GET /rooms',
+      uploadAudio: 'POST /upload-audio',
+      generateReport: 'POST /generate-session-report',
+      checkDressCode: 'POST /check-dress-code',
+      analyze: 'POST /analyze'
+    },
+    socketIO: 'ws://[domain]/socket.io',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
