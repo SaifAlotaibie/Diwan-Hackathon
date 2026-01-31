@@ -453,14 +453,23 @@ app.get('/rooms', (req, res) => {
 });
 
 // Start server on all interfaces (0.0.0.0)
-server.listen(PORT, '0.0.0.0', () => {
+const PORT_TO_USE = process.env.PORT || 3001;
+console.log(`📡 Attempting to start server on port ${PORT_TO_USE}...`);
+
+server.listen(PORT_TO_USE, '0.0.0.0', (err) => {
+  if (err) {
+    console.error('❌ Failed to start server:', err);
+    process.exit(1);
+  }
+  
   console.log('');
   console.log('╔══════════════════════════════════════════╗');
   console.log('║   🚀 WebRTC Meeting Server Running      ║');
   console.log('╚══════════════════════════════════════════╝');
   console.log('');
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📡 Health check: http://localhost:${PORT}/health`);
+  console.log(`🚀 Server running on port ${PORT_TO_USE}`);
+  console.log(`📡 Health check: http://localhost:${PORT_TO_USE}/health`);
+  console.log(`🌍 Listening on: 0.0.0.0:${PORT_TO_USE}`);
   console.log('');
   console.log('🔌 Socket.IO ready for connections');
   console.log('');
@@ -472,11 +481,13 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`  POST /check-dress-code          - Dress code check (lawyers only)`);
   console.log(`  POST /analyze                   - Analyze meeting (legacy)`);
   console.log('');
+  console.log('✅ Server is ready to accept requests');
 });
 
 // Global error handlers to prevent crashes
 process.on('uncaughtException', (error) => {
   console.error('❌ Uncaught Exception:', error);
+  console.error('Stack:', error.stack);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
@@ -486,7 +497,12 @@ process.on('unhandledRejection', (reason, promise) => {
 server.on('error', (error) => {
   console.error('❌ Server Error:', error);
   if (error.code === 'EADDRINUSE') {
-    console.error(`Port ${PORT} is already in use`);
+    console.error(`Port ${PORT_TO_USE} is already in use`);
     process.exit(1);
   }
 });
+
+// Keep-alive heartbeat (log every 30 seconds to show server is alive)
+setInterval(() => {
+  console.log(`💓 Server heartbeat - Running on port ${PORT_TO_USE} - Active connections: ${io.engine.clientsCount}`);
+}, 30000);
