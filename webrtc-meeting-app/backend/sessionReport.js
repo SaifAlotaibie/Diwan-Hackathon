@@ -19,9 +19,9 @@ const FormData = require('form-data');
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_API_URL = 'https://api.openai.com/v1';
 
+// Validate API key but don't throw - let server start
 if (!OPENAI_API_KEY) {
-  console.error('❌ OPENAI_API_KEY is not set in environment variables');
-  throw new Error('OPENAI_API_KEY environment variable is required');
+  console.warn('⚠️ WARNING: OPENAI_API_KEY is not set. Session reports will fail.');
 }
 
 /**
@@ -68,6 +68,11 @@ function finalizeSessionMetadata(sessionMetadata) {
 async function transcribeAudio(audioFilePath) {
   try {
     console.log('🎙️ Transcribing audio with Whisper (Arabic optimized)...');
+    
+    // Check if API key is available
+    if (!OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY is not configured');
+    }
     
     if (!fs.existsSync(audioFilePath)) {
       throw new Error('Audio file not found');

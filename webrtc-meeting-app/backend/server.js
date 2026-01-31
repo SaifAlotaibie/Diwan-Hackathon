@@ -1,3 +1,5 @@
+console.log("🚀 Backend process started");
+
 // Load environment variables
 require('dotenv').config();
 
@@ -8,6 +10,15 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+
+console.log("✅ Core modules loaded");
+
+// Check for required environment variables BEFORE requiring modules that need them
+if (!process.env.OPENAI_API_KEY) {
+  console.error('❌ CRITICAL: OPENAI_API_KEY is not set in environment variables');
+  console.error('   The server will start but AI features (reports, dress code) will not work.');
+  console.error('   Please set OPENAI_API_KEY in your deployment environment.');
+}
 
 // Session Content Report module
 const { initializeSessionMetadata, generateSessionContentReport } = require('./sessionReport');
@@ -418,27 +429,13 @@ app.get('/rooms', (req, res) => {
 
 // Start server on all interfaces (0.0.0.0)
 server.listen(PORT, '0.0.0.0', () => {
-  const os = require('os');
-  const interfaces = os.networkInterfaces();
-  const addresses = [];
-  
-  for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name]) {
-      if (iface.family === 'IPv4' && !iface.internal) {
-        addresses.push(iface.address);
-      }
-    }
-  }
-  
   console.log('');
   console.log('╔══════════════════════════════════════════╗');
   console.log('║   🚀 WebRTC Meeting Server Running      ║');
   console.log('╚══════════════════════════════════════════╝');
   console.log('');
-  console.log(`📡 Local:   http://localhost:${PORT}`);
-  addresses.forEach(addr => {
-    console.log(`📱 Network: http://${addr}:${PORT}`);
-  });
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📡 Health check: http://localhost:${PORT}/health`);
   console.log('');
   console.log('🔌 Socket.IO ready for connections');
   console.log('');
