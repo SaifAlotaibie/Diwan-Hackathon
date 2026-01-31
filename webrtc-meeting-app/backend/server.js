@@ -1,4 +1,9 @@
 console.log("🚀 Backend process started");
+console.log("📍 Current directory:", __dirname);
+console.log("🔑 Environment check:");
+console.log("  - NODE_ENV:", process.env.NODE_ENV || "not set");
+console.log("  - PORT:", process.env.PORT || "not set (will use 3001)");
+console.log("  - OPENAI_API_KEY:", process.env.OPENAI_API_KEY ? "✅ SET" : "❌ NOT SET");
 
 // Load environment variables
 require('dotenv').config();
