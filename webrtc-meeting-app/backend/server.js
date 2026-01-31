@@ -5,7 +5,7 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { transcribeAudio, analyzeTranscript } = require('./ai');
+// const { transcribeAudio, analyzeTranscript } = require('./ai'); // Disabled for now
 
 const app = express();
 const server = http.createServer(app);
@@ -158,7 +158,8 @@ app.post('/analyze', async (req, res) => {
       console.log(`📝 Transcribing ${audioFile.participantId}...`);
       
       try {
-        const transcript = await transcribeAudio(audioFile.path);
+        // const transcript = await transcribeAudio(audioFile.path);
+        const transcript = `[محاكاة] نص محاضر الجلسة من ${audioFile.participantId}`;
         transcriptions.push({
           participantId: audioFile.participantId,
           text: transcript
@@ -178,7 +179,14 @@ app.post('/analyze', async (req, res) => {
     let analysis = null;
     
     try {
-      analysis = await analyzeTranscript(transcriptions);
+      // analysis = await analyzeTranscript(transcriptions);
+      analysis = {
+        summary: 'ملخص الجلسة القضائية: تمت مناقشة القضية بحضور الأطراف وتم الاستماع للمرافعات',
+        keyPoints: transcriptions.map(t => ({
+          participant: t.participantId,
+          points: ['تم تسجيل الحضور', 'المشاركة في الجلسة']
+        }))
+      };
       console.log('✅ Analysis complete');
     } catch (error) {
       console.error('❌ Analysis failed:', error.message);

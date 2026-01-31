@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>خدمة الجلسات القضائية الإلكترونية - منصة معين</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .sessions-container {
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100vh - 120px);
+        }
+        .sessions-header {
+            background: var(--primary-color, #1a472a);
+            color: white;
+            padding: 2rem 0;
+        }
+        .sessions-header h1 {
+            margin: 0;
+            font-size: 1.75rem;
+        }
+        .sessions-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f5f5f5;
+        }
+        .iframe-container {
+            flex: 1;
+            position: relative;
+            min-height: 600px;
+        }
+        .iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+        @media (max-width: 768px) {
+            .iframe-container {
+                min-height: 500px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="top-bar">
+            <div class="container">
+                <p>موقع حكومي رسمي تابع لحكومة المملكة العربية السعودية</p>
+            </div>
+        </div>
+        
+        <nav class="navbar">
+            <div class="container">
+                <div class="nav-content">
+                    <div class="logo">
+                        <img src="assets/logo.svg" alt="شعار ديوان المظالم" class="logo-img">
+                        <span class="logo-text">ديوان المظالم - منصة معين</span>
+                    </div>
+                    
+                    <ul class="nav-menu">
+                        <li><a href="index.html">الرئيسية</a></li>
+                        <li><a href="about.html">عن الديوان</a></li>
+                        <li><a href="services.html">الخدمات الإلكترونية</a></li>
+                        <li><a href="contact.html">اتصل بنا</a></li>
+                    </ul>
+                    
+                    <div class="nav-actions">
+                        <button class="search-btn">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16zM18 18l-4.35-4.35" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </button>
+                        <a href="#" class="btn btn-primary">تسجيل الدخول</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="sessions-container">
+        <div class="sessions-header">
+            <div class="container">
+                <h1>🎥 خدمة الجلسات القضائية الإلكترونية</h1>
+                <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">حضور الجلسات القضائية عن بُعد بتقنية الفيديو والصوت</p>
+            </div>
+        </div>
+        
+        <div class="sessions-content">
+            <div class="iframe-container">
+                <iframe 
+                    src="http://localhost:5173" 
+                    title="الجلسات القضائية الإلكترونية"
+                    allow="camera; microphone; fullscreen"
+                    allowfullscreen>
+                </iframe>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>© 2026 ديوان المظالم - جميع الحقوق محفوظة</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
