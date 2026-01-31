@@ -8,8 +8,8 @@
     "npm": ">=9.0.0"
   },
   "scripts": {
-    "start": "node test-server.js",
-    "start:real": "node server.js",
+    "start": "node server.js",
+    "test": "node test-server.js",
     "dev": "nodemon server.js"
   },
   "keywords": [
