@@ -1,0 +1,199 @@
+{
+  "تسجيل الدخول": {
+    "count": 12,
+    "hrefs": [
+      "https://www.bog.gov.sa/AboutUs/_layouts/15/Authenticate.aspx?Source=%2FAboutUs%2FPages%2Fdefault%2Easpx",
+      "https://www.bog.gov.sa/AboutUs/BoardPlace/_layouts/15/Authenticate.aspx?Source=%2FAboutUs%2FBoardPlace%2FPages%2Fdefault%2Easpx",
+      "https://www.bog.gov.sa/AboutUs/BoardPlace/_layouts/15/Authenticate.aspx?Source=%2FAboutUs%2FBoardPlace%2FPages%2FDEP%5F002%2Easpx",
+      "https://www.bog.gov.sa/AboutUs/BOGCourts/_layouts/15/Authenticate.aspx?Source=%2FAboutUs%2FBOGCourts%2FPages%2FDefault%2Easpx",
+      "https://www.bog.gov.sa/AboutUs/OrganizationalStructure/_layouts/15/Authenticate.aspx?Source=%2FAboutUs%2FOrganizationalStructure%2FPages%2Fdefault%2Easpx"
+    ]
+  },
+  "هاكاثون ذكاء القضاء": {
+    "count": 12,
+    "hrefs": [
+      "/Pages/hackathon.aspx"
+    ]
+  },
+  "الهيكل التنظيمي": {
+    "count": 12,
+    "hrefs": [
+      "/AboutUs/OrganizationalStructure/Pages/default.aspx",
+      "https://www.bog.gov.sa/AboutUs/OrganizationalStructure/Pages/default.aspx",
+      "/AboutUs/OrganizationalStructure/"
+    ]
+  },
+  "محاكم الديوان": {
+    "count": 12,
+    "hrefs": [
+      "/AboutUs/BOGCourts/Pages/Default.aspx",
+      "https://www.bog.gov.sa/AboutUs/BOGCourts/Pages/Default.aspx",
+      "/AboutUs/BOGCourts/"
+    ]
+  },
+  "عن الديوان": {
+    "count": 11,
+    "hrefs": [
+      "/AboutUs/",
+      "/AboutUs",
+      "/AboutUs/Pages/default.aspx"
+    ]
+  },
+  "خريطة الموقع": {
+    "count": 10,
+    "hrefs": [
+      "#",
+      "/GeneralServices/Pages/SiteMap.aspx"
+    ]
+  },
+  "مقر الديوان": {
+    "count": 8,
+    "hrefs": [
+      "/AboutUs/BoardPlace/Pages/default.aspx",
+      "https://www.bog.gov.sa/AboutUs/BoardPlace/Pages/default.aspx",
+      "/AboutUs/BoardPlace/"
+    ]
+  },
+  "نبذة عن الديوان": {
+    "count": 7,
+    "hrefs": [
+      "/AboutUs/Pages/Engender.aspx",
+      "https://www.bog.gov.sa/AboutUs/Pages/Engender.aspx"
+    ]
+  },
+  "رؤساء ديوان المظالم": {
+    "count": 7,
+    "hrefs": [
+      "/AboutUs/Pages/BOGPresidents.aspx",
+      "https://www.bog.gov.sa/AboutUs/Pages/BOGPresidents.aspx"
+    ]
+  },
+  "كلمة معالي الرئيس": {
+    "count": 7,
+    "hrefs": [
+      "/AboutUs/Pages/PresidentWord.aspx",
+      "https://www.bog.gov.sa/AboutUs/Pages/PresidentWord.aspx"
+    ]
+  },
+  "اختصاصات الديوان": {
+    "count": 7,
+    "hrefs": [
+      "/AboutUs/Pages/TermsOfReference.aspx",
+      "https://www.bog.gov.sa/AboutUs/Pages/TermsOfReference.aspx"
+    ]
+  },
+  "تشغيل وضع قابل للوصول بشكل أفضل": {
+    "count": 6,
+    "hrefs": [
+      "#"
+    ]
+  },
+  "إيقاف تشغيل الوضع القابل للوصول بشكل أفضل": {
+    "count": 6,
+    "hrefs": [
+      "#"
+    ]
+  },
+  "تخطي أوامر الشريط": {
+    "count": 6,
+    "hrefs": [
+      "javascript:;"
+    ]
+  },
+  "التخطي إلى المحتوى الأساسي": {
+    "count": 6,
+    "hrefs": [
+      "javascript:;"
+    ]
+  },
+  "إيقاف تشغيل الحركات": {
+    "count": 6,
+    "hrefs": [
+      "#"
+    ]
+  },
+  "تشغيل الحركات": {
+    "count": 6,
+    "hrefs": [
+      "#"
+    ]
+  },
+  "20250410121": {
+    "count": 6,
+    "hrefs": [
+      "https://raqmi.dga.gov.sa/platforms/DigitalStamp/ShowCertificate/394"
+    ]
+  },
+  "البحث": {
+    "count": 6,
+    "hrefs": [
+      "#"
+    ]
+  },
+  "English": {
+    "count": 6,
+    "hrefs": [
+      "/en/"
+    ]
+  },
+  "بوابة ديوان المظالم": {
+    "count": 6,
+    "hrefs": [
+      "/Pages/default.aspx"
+    ]
+  },
+  "جولة افتراضية": {
+    "count": 5,
+    "hrefs": [
+      "https://www.bog.gov.sa/360/index.htm"
+    ]
+  },
+  "يرحب ديوان المظالم بأفكاركم الإبداعية والتطويرية، لتحويلها إلى حلول مؤثرة": {
+    "count": 5,
+    "hrefs": [
+      "/innovate/Pages/add-request.aspx"
+    ]
+  },
+  "محادثة": {
+    "count": 5,
+    "hrefs": [
+      "#"
+    ]
+  },
+  "بريد إلكتروني": {
+    "count": 5,
+    "hrefs": [
+      "#"
+    ]
+  },
+  "مكالمة هاتفية": {
+    "count": 5,
+    "hrefs": [
+      "#"
+    ]
+  },
+  "الأسئلة الشائعة": {
+    "count": 5,
+    "hrefs": [
+      "/Help/FAQs/"
+    ]
+  },
+  "انتقل إلى أعلى": {
+    "count": 5,
+    "hrefs": [
+      "#"
+    ]
+  },
+  "كلمة معالي رئيس الديوان": {
+    "count": 5,
+    "hrefs": [
+      "/AboutUs/Pages/PresidentWord.aspx"
+    ]
+  },
+  "الرؤية والرسالة والأهداف": {
+    "count": 5,
+    "hrefs": [
+      "/StrategicPlan/Pages/StrategicFeatures.aspx"
+    ]
+  }
+}

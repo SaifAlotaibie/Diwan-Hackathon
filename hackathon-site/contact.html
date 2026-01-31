@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اتصل بنا - ديوان المظالم</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="top-bar">
+            <div class="container">
+                <p>موقع حكومي رسمي تابع لحكومة المملكة العربية السعودية</p>
+            </div>
+        </div>
+        
+        <nav class="navbar">
+            <div class="container">
+                <div class="nav-content">
+                    <div class="logo">
+                        <img src="assets/logo.svg" alt="شعار ديوان المظالم" class="logo-img">
+                        <span class="logo-text">ديوان المظالم</span>
+                    </div>
+                    
+                    <ul class="nav-menu">
+                        <li><a href="index.html">الرئيسية</a></li>
+                        <li><a href="about.html">عن الديوان</a></li>
+                        <li><a href="services.html">الخدمات الإلكترونية</a></li>
+                        <li><a href="contact.html" class="active">اتصل بنا</a></li>
+                    </ul>
+                    
+                    <div class="nav-actions">
+                        <button class="search-btn">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16zM18 18l-4.35-4.35" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </button>
+                        <a href="#" class="btn btn-primary">تسجيل الدخول</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section style="padding: 4rem 0;">
+            <div class="container">
+                <h1 class="section-title">اتصل بنا</h1>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 3rem;">
+                    <div class="content-box" style="background: white; padding: 2.5rem; border-radius: 1rem; box-shadow: var(--shadow-lg); text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📞</div>
+                        <h3 style="color: var(--primary-color); margin-bottom: 1rem;">الهاتف</h3>
+                        <p style="font-size: 1.25rem; color: var(--gray-700); direction: ltr;">920000105</p>
+                    </div>
+
+                    <div class="content-box" style="background: white; padding: 2.5rem; border-radius: 1rem; box-shadow: var(--shadow-lg); text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">✉️</div>
+                        <h3 style="color: var(--primary-color); margin-bottom: 1rem;">البريد الإلكتروني</h3>
+                        <p style="font-size: 1.25rem; color: var(--gray-700);">info@bog.gov.sa</p>
+                    </div>
+
+                    <div class="content-box" style="background: white; padding: 2.5rem; border-radius: 1rem; box-shadow: var(--shadow-lg); text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📍</div>
+                        <h3 style="color: var(--primary-color); margin-bottom: 1rem;">العنوان</h3>
+                        <p style="font-size: 1.125rem; color: var(--gray-700);">الرياض - المملكة العربية السعودية</p>
+                    </div>
+                </div>
+
+                <div class="content-box" style="background: white; padding: 3rem; border-radius: 1rem; box-shadow: var(--shadow-lg);">
+                    <h2 style="color: var(--primary-color); margin-bottom: 2rem; text-align: center; font-size: 1.75rem;">أرسل لنا رسالة</h2>
+                    <form style="max-width: 600px; margin: 0 auto;">
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; color: var(--gray-700); font-weight: 500;">الاسم</label>
+                            <input type="text" style="width: 100%; padding: 0.75rem; border: 2px solid var(--gray-200); border-radius: var(--radius-md); font-family: var(--font-family); font-size: 1rem;">
+                        </div>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; color: var(--gray-700); font-weight: 500;">البريد الإلكتروني</label>
+                            <input type="email" style="width: 100%; padding: 0.75rem; border: 2px solid var(--gray-200); border-radius: var(--radius-md); font-family: var(--font-family); font-size: 1rem;">
+                        </div>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; color: var(--gray-700); font-weight: 500;">الموضوع</label>
+                            <input type="text" style="width: 100%; padding: 0.75rem; border: 2px solid var(--gray-200); border-radius: var(--radius-md); font-family: var(--font-family); font-size: 1rem;">
+                        </div>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; color: var(--gray-700); font-weight: 500;">الرسالة</label>
+                            <textarea rows="5" style="width: 100%; padding: 0.75rem; border: 2px solid var(--gray-200); border-radius: var(--radius-md); font-family: var(--font-family); font-size: 1rem; resize: vertical;"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.125rem;">إرسال الرسالة</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>© 2026 ديوان المظالم - جميع الحقوق محفوظة</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
