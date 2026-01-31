@@ -1,3 +1,12 @@
+#!/usr/bin/env node
+console.log("========================================");
+console.log("🚀 DIWAN BACKEND STARTING...");
+console.log("========================================");
+console.log("Node version:", process.version);
+console.log("Platform:", process.platform);
+console.log("Working directory:", process.cwd());
+console.log("========================================");
+
 console.log("🚀 Backend process started");
 console.log("📍 Current directory:", __dirname);
 console.log("🔑 Environment check:");
@@ -62,8 +71,6 @@ const io = socketIo(server, {
   transports: ['websocket', 'polling'],
   allowEIO3: true
 });
-
-const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
