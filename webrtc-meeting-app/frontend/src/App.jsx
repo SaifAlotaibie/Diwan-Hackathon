@@ -17,16 +17,19 @@ function App() {
     return (
       <div className="app">
         <div className="header">
-          <h1>🎥 WebRTC Meeting</h1>
-          <p>1-to-1 Video Call with AI Analysis</p>
+          <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', marginBottom: '10px'}}>
+            <img src="/bog-logo.svg" alt="شعار ديوان المظالم" style={{height: '60px', filter: 'brightness(0) invert(1)'}} />
+            <h1 style={{margin: 0}}>الجلسات القضائية الإلكترونية</h1>
+          </div>
+          <p>نظام الجلسات عن بُعد - ديوان المظالم</p>
         </div>
         
         <div className="lobby">
-          <h2>Join Meeting</h2>
+          <h2>الانضمام للجلسة</h2>
           
           <input
             type="text"
-            placeholder="Your Name"
+            placeholder="الاسم الكامل"
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleJoin()}
@@ -34,7 +37,7 @@ function App() {
           
           <input
             type="text"
-            placeholder="Room ID (e.g., room123)"
+            placeholder="رقم الجلسة (مثال: session123)"
             value={roomId}
             onChange={(e) => setRoomId(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleJoin()}
@@ -44,12 +47,12 @@ function App() {
             onClick={handleJoin}
             disabled={!roomId.trim() || !userName.trim()}
           >
-            Join Room
+            الانضمام للجلسة
           </button>
           
           <div style={{marginTop: '20px', fontSize: '14px', color: '#666', textAlign: 'center'}}>
-            <p>💡 <strong>Tip:</strong> Use the same Room ID on both devices</p>
-            <p>🔒 Local-only | No cloud services</p>
+            <p>💡 <strong>تنبيه:</strong> استخدم نفس رقم الجلسة على كلا الجهازين</p>
+            <p>🔒 آمن ومحلي | لا يتم تخزين البيانات</p>
           </div>
         </div>
       </div>
