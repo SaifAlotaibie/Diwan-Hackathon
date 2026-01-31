@@ -117,7 +117,7 @@ ul {
 }
 
 .navbar {
-    padding: var(--spacing-md) 0;
+    padding: var(--spacing-lg) 0;
 }
 
 .nav-content {
@@ -146,22 +146,24 @@ ul {
 
 .nav-menu {
     display: flex;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-md);
     flex: 1;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
 .nav-menu a {
-    color: var(--gray-700);
+    color: var(--primary-color);
     font-weight: 500;
     padding: var(--spacing-xs) var(--spacing-sm);
     border-radius: var(--radius-md);
     transition: var(--transition);
+    white-space: nowrap;
 }
 
 .nav-menu a:hover,
 .nav-menu a.active {
-    color: var(--primary-color);
+    color: var(--primary-color-dark);
     background-color: var(--gray-50);
 }
 
