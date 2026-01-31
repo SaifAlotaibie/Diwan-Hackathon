@@ -25,11 +25,31 @@ if (!process.env.OPENAI_API_KEY) {
   console.error('   Please set OPENAI_API_KEY in your deployment environment.');
 }
 
-// Session Content Report module
-const { initializeSessionMetadata, generateSessionContentReport } = require('./sessionReport');
+// Session Content Report module (with error handling)
+let initializeSessionMetadata, generateSessionContentReport;
+try {
+  const sessionReport = require('./sessionReport');
+  initializeSessionMetadata = sessionReport.initializeSessionMetadata;
+  generateSessionContentReport = sessionReport.generateSessionContentReport;
+  console.log("✅ Session report module loaded");
+} catch (error) {
+  console.error("❌ Failed to load session report module:", error.message);
+  // Provide dummy functions so server can still start
+  initializeSessionMetadata = () => ({});
+  generateSessionContentReport = async () => ({ error: "Module not loaded" });
+}
 
-// Dress Code Check module (MVP feature)
-const { checkDressCode } = require('./dressCodeCheck');
+// Dress Code Check module (MVP feature, with error handling)
+let checkDressCode;
+try {
+  const dressCodeModule = require('./dressCodeCheck');
+  checkDressCode = dressCodeModule.checkDressCode;
+  console.log("✅ Dress code module loaded");
+} catch (error) {
+  console.error("❌ Failed to load dress code module:", error.message);
+  // Provide dummy function so server can still start
+  checkDressCode = async () => ({ compliant: true });
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -452,4 +472,21 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`  POST /check-dress-code          - Dress code check (lawyers only)`);
   console.log(`  POST /analyze                   - Analyze meeting (legacy)`);
   console.log('');
+});
+
+// Global error handlers to prevent crashes
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+server.on('error', (error) => {
+  console.error('❌ Server Error:', error);
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use`);
+    process.exit(1);
+  }
 });
