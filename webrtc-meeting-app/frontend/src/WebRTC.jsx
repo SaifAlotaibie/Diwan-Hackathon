@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import io from 'socket.io-client'
 import axios from 'axios'
 
@@ -21,37 +21,76 @@ const ICE_SERVERS = {
 
 function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, onLeave }) {
   const [connectionStatus, setConnectionStatus] = useState('connecting')
+  const [participants, setParticipants] = useState([])
+  const [remoteStreamsReady, setRemoteStreamsReady] = useState({})
+  const [activeSpeaker, setActiveSpeaker] = useState(null)
+  const [sessionEnded, setSessionEnded] = useState(false)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [sessionReport, setSessionReport] = useState(null)
+  const [error, setError] = useState(null)
   const [isCameraOn, setIsCameraOn] = useState(true)
   const [isMicOn, setIsMicOn] = useState(true)
-  const [peerName, setPeerName] = useState('Waiting...')
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [analysis, setAnalysis] = useState(null)
-  const [error, setError] = useState(null)
   
+  // Dress Code Check state (MVP feature - lawyers only)
+  const [dressCodeWarning, setDressCodeWarning] = useState(null)
+  const [lastDressCodeCheck, setLastDressCodeCheck] = useState(0)
+  
+  // Refs
   const socket = useRef(null)
-  const peerConnection = useRef(null)
   const localStream = useRef(null)
-  const remoteStream = useRef(null)
+  const peerConnections = useRef(new Map()) // socketId -> RTCPeerConnection
+  const remoteStreams = useRef(new Map()) // socketId -> MediaStream
   const mediaRecorder = useRef(null)
   const audioChunks = useRef([])
+  const audioContext = useRef(null)
+  const audioAnalysers = useRef(new Map()) // socketId -> AnalyserNode
+  const activeSpeakerTimeout = useRef(null)
+  const dressCodeCheckInterval = useRef(null)
   
   const localVideoRef = useRef(null)
-  const remoteVideoRef = useRef(null)
 
   // Initialize WebRTC and Socket
   useEffect(() => {
-    console.log('🚀 Initializing WebRTC Meeting...')
+    console.log('🚀 Initializing Many-to-Many WebRTC Meeting...')
     initializeMedia()
     initializeSocket()
     
+    // Start dress code checking for lawyers only
+    if (userRole === 'lawyer') {
+      console.log('👔 Starting dress code monitoring for lawyer')
+      startDressCodeMonitoring()
+    }
+    
     return () => {
       cleanup()
+      // Stop dress code monitoring
+      if (dressCodeCheckInterval.current) {
+        clearInterval(dressCodeCheckInterval.current)
+      }
     }
   }, [])
+
+  // Debug: Track participants changes
+  useEffect(() => {
+    console.log('👥 Participants state updated:', participants.length)
+    console.log('👥 Participants:', participants.map(p => ({
+      id: p.socketId,
+      name: p.participantId,
+      role: p.role
+    })))
+  }, [participants])
+
+  // Debug: Track remote streams changes
+  useEffect(() => {
+    console.log('📺 Remote streams ready:', remoteStreamsReady)
+    console.log('📺 Remote streams count:', remoteStreams.current.size)
+  }, [remoteStreamsReady])
 
   const initializeMedia = async () => {
     try {
       console.log('📹 Requesting camera and microphone access...')
+      
+      alert('⚠️ للانضمام للجلسة، يرجى السماح باستخدام الكاميرا والمايكروفون.\n\nسيظهر طلب الإذن في المتصفح الآن.')
       
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -73,36 +112,41 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
       // Start recording audio
       startRecording(stream)
       
+      // Setup active speaker detection for local user
+      setupActiveSpeakerDetection(stream, 'local')
+      
       console.log('✅ Media initialized successfully')
-      console.log(`📹 Video tracks: ${stream.getVideoTracks().length}`)
-      console.log(`🎤 Audio tracks: ${stream.getAudioTracks().length}`)
       
     } catch (err) {
       console.error('❌ Media error:', err)
-      let errorMessage = 'Could not access camera/microphone. '
+      let errorMessage = 'لا يمكن الوصول للكاميرا أو المايكروفون. '
       
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        errorMessage += 'Please allow permissions and refresh the page.'
+        errorMessage += 'يرجى السماح بالأذونات وتحديث الصفحة.'
       } else if (err.name === 'NotFoundError') {
-        errorMessage += 'No camera or microphone found.'
+        errorMessage += 'لم يتم العثور على كاميرا أو مايكروفون.'
       } else {
-        errorMessage += 'Please check your device settings.'
+        errorMessage += 'يرجى التحقق من إعدادات الجهاز.'
       }
       
       setError(errorMessage)
-      alert(errorMessage) // Show alert to user
+      alert(errorMessage)
     }
   }
 
   const startRecording = (stream) => {
     try {
-      // Record only audio
-      const audioStream = new MediaStream(
-        stream.getAudioTracks()
-      )
+      const audioStream = new MediaStream(stream.getAudioTracks())
+      
+      // Choose best audio format available
+      let mimeType = 'audio/webm;codecs=opus'
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/webm'
+      }
       
       mediaRecorder.current = new MediaRecorder(audioStream, {
-        mimeType: 'audio/webm'
+        mimeType: mimeType,
+        audioBitsPerSecond: 128000 // Higher bitrate for better quality (128 kbps)
       })
       
       mediaRecorder.current.ondataavailable = (event) => {
@@ -112,132 +156,426 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
       }
       
       mediaRecorder.current.start()
-      console.log('🎙️ Recording started')
+      console.log('🎙️ Recording started with', mimeType, 'at 128kbps')
     } catch (err) {
       console.error('❌ Recording error:', err)
     }
   }
+
+  // Active Speaker Detection using Web Audio API
+  const setupActiveSpeakerDetection = (stream, socketId) => {
+    try {
+      if (!audioContext.current) {
+        audioContext.current = new (window.AudioContext || window.webkitAudioContext)()
+      }
+      
+      const source = audioContext.current.createMediaStreamSource(stream)
+      const analyser = audioContext.current.createAnalyser()
+      analyser.fftSize = 512
+      analyser.smoothingTimeConstant = 0.8
+      
+      source.connect(analyser)
+      audioAnalysers.current.set(socketId, analyser)
+      
+      // Start monitoring audio levels
+      monitorAudioLevels(socketId, analyser)
+      
+    } catch (err) {
+      console.error('❌ Active speaker detection error:', err)
+    }
+  }
+
+  const monitorAudioLevels = (socketId, analyser) => {
+    const dataArray = new Uint8Array(analyser.frequencyBinCount)
+    const SPEAKING_THRESHOLD = 40 // Adjust as needed
+    
+    const checkLevel = () => {
+      if (!analyser) return
+      
+      analyser.getByteFrequencyData(dataArray)
+      const average = dataArray.reduce((a, b) => a + b) / dataArray.length
+      
+      if (average > SPEAKING_THRESHOLD) {
+        handleActiveSpeaker(socketId)
+      }
+      
+      requestAnimationFrame(checkLevel)
+    }
+    
+    checkLevel()
+  }
+
+  const handleActiveSpeaker = useCallback((socketId) => {
+    // Clear previous timeout
+    if (activeSpeakerTimeout.current) {
+      clearTimeout(activeSpeakerTimeout.current)
+    }
+    
+    // Set new active speaker
+    setActiveSpeaker(socketId)
+    
+    // Emit to others if it's local user
+    if (socketId === 'local' && socket.current) {
+      socket.current.emit('active-speaker', {
+        roomId,
+        participantId: userName,
+        role: userRole
+      })
+    }
+    
+    // Clear active speaker after 1.5 seconds of silence
+    activeSpeakerTimeout.current = setTimeout(() => {
+      setActiveSpeaker(null)
+    }, 1500)
+  }, [roomId, userName, userRole])
 
   const initializeSocket = () => {
     socket.current = io(SOCKET_SERVER)
     
     socket.current.on('connect', () => {
       console.log('🔌 Socket connected')
-      socket.current.emit('join-room', roomId)
+      socket.current.emit('join-room', { 
+        roomId, 
+        participantId: userName,
+        role: userRole 
+      })
     })
     
-    socket.current.on('room-full', () => {
-      const errorMsg = '❌ الغرفة ممتلئة! الحد الأقصى للمشاركين 10. استخدم رقم جلسة آخر.'
-      setError(errorMsg)
-      setConnectionStatus('disconnected')
-      alert(errorMsg)
-      console.error(errorMsg)
+    // Receive list of existing participants when joining
+    socket.current.on('room-users', (existingParticipants) => {
+      console.log('👥 Existing participants:', existingParticipants)
+      console.log('📊 My socket ID:', socket.current.id)
+      console.log('📊 Number of existing participants:', existingParticipants.length)
+
+      const others = existingParticipants.filter(p => p.socketId !== socket.current.id)
+      console.log('📊 Other participants (excluding me):', others.length)
+      console.log('📊 Other participants details:', others)
+
+      setParticipants(others)
+
+      // NO peer connections created here - we wait for existing users to send offers
+      console.log('⏳ Waiting for offers from existing participants...')
     })
     
-    socket.current.on('user-joined', (socketId) => {
-      console.log('👋 User joined:', socketId)
-      setPeerName('Participant 2')
-      setConnectionStatus('connecting')
-      createPeerConnection()
-      createOffer()
-      console.log('📤 Creating offer for peer...')
+    // New user joined
+    socket.current.on('user-joined', (newParticipant) => {
+      console.log('👋 User joined:', newParticipant)
+      console.log(`📊 New participant: ${newParticipant.participantId} (${newParticipant.socketId})`)
+      
+      setParticipants(prev => {
+        console.log('📊 Previous participants:', prev.length)
+        const updated = [...prev, newParticipant]
+        console.log('📊 Updated participants:', updated.length)
+        return updated
+      })
+      
+      // EXISTING USER: Create connection and send offer immediately
+      console.log(`🔗 I (existing user) will create connection with new user and send offer`)
+      createPeerConnection(newParticipant.socketId, newParticipant, true)
     })
     
+    // Handle WebRTC signaling
     socket.current.on('offer', async ({ offer, from }) => {
       console.log('📥 Received offer from:', from)
-      setPeerName('Participant 2')
-      setConnectionStatus('connecting')
-      createPeerConnection()
-      await peerConnection.current.setRemoteDescription(new RTCSessionDescription(offer))
-      const answer = await peerConnection.current.createAnswer()
-      await peerConnection.current.setLocalDescription(answer)
-      socket.current.emit('answer', { answer, roomId })
-      console.log('📤 Sent answer back')
-    })
-    
-    socket.current.on('answer', async ({ answer }) => {
-      console.log('📥 Received answer')
-      await peerConnection.current.setRemoteDescription(new RTCSessionDescription(answer))
-      console.log('✅ WebRTC connection established')
-    })
-    
-    socket.current.on('ice-candidate', async ({ candidate }) => {
-      console.log('🧊 Received ICE candidate')
+      console.log('📊 Offer SDP type:', offer.type)
+      
+      let pc = peerConnections.current.get(from)
+      
+      if (!pc) {
+        console.warn('⚠️ No peer connection exists for:', from)
+        console.log('🔧 Creating peer connection NOW to receive offer')
+        
+        // Create a peer connection to handle this offer
+        const participant = {
+          socketId: from,
+          participantId: from,
+          role: 'participant'
+        }
+        
+        // Create peer connection WITHOUT sending offer
+        const newPc = new RTCPeerConnection(ICE_SERVERS)
+        peerConnections.current.set(from, newPc)
+        console.log('✅ New peer connection created for:', from)
+        
+        // Add local stream tracks
+        if (localStream.current) {
+          localStream.current.getTracks().forEach(track => {
+            console.log(`➕ Adding local ${track.kind} track to peer ${from}`)
+            newPc.addTrack(track, localStream.current)
+          })
+        }
+        
+        // Handle incoming tracks
+        newPc.ontrack = (event) => {
+          console.log('📺 Remote track from:', from, event.track.kind)
+          
+          if (event.streams && event.streams[0]) {
+            const stream = event.streams[0]
+            console.log('📺 Stream tracks:', stream.getTracks().map(t => `${t.kind} (${t.readyState})`))
+            
+            remoteStreams.current.set(from, stream)
+            console.log('✅ Remote stream stored for:', from)
+            
+            // Setup speaker detection for remote stream
+            if (event.track.kind === 'audio') {
+              setupActiveSpeakerDetection(stream, from)
+            }
+            
+            // Mark this remote stream as ready and trigger re-render
+            setRemoteStreamsReady(prev => {
+              const updated = {
+                ...prev,
+                [from]: true
+              }
+              console.log('📊 Remote streams ready:', updated)
+              return updated
+            })
+            
+            console.log(`✅ Remote stream ready for ${from}`)
+          }
+        }
+        
+        // Handle ICE candidates
+        newPc.onicecandidate = (event) => {
+          if (event.candidate) {
+            socket.current.emit('ice-candidate', {
+              candidate: event.candidate,
+              roomId,
+              to: from
+            })
+          }
+        }
+        
+        // Monitor connection state
+        newPc.onconnectionstatechange = () => {
+          console.log(`🔗 Connection state with ${from}:`, newPc.connectionState)
+        }
+        
+        pc = newPc
+      }
+      
       try {
-        await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate))
+        console.log('📝 Setting remote description...')
+        await pc.setRemoteDescription(new RTCSessionDescription(offer))
+        console.log('✅ Remote description set')
+        
+        console.log('📝 Creating answer...')
+        const answer = await pc.createAnswer()
+        console.log('✅ Answer created')
+        
+        console.log('📝 Setting local description...')
+        await pc.setLocalDescription(answer)
+        console.log('✅ Local description set')
+        
+        console.log('📤 Sending answer to:', from)
+        socket.current.emit('answer', { answer, roomId, to: from })
+        console.log('✅ Answer sent successfully')
       } catch (err) {
-        console.error('ICE candidate error:', err)
+        console.error('❌ Offer handling error:', err)
+        console.error('❌ Error details:', err.message)
       }
     })
     
-    socket.current.on('user-left', () => {
-      console.log('👋 User left')
-      setPeerName('Waiting...')
-      setConnectionStatus('connecting')
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = null
+    socket.current.on('answer', async ({ answer, from }) => {
+      console.log('📥 Received answer from:', from)
+      
+      const pc = peerConnections.current.get(from)
+      if (!pc) {
+        console.error('❌ No peer connection for:', from)
+        return
       }
+      
+      try {
+        await pc.setRemoteDescription(new RTCSessionDescription(answer))
+        console.log('✅ Connection established with:', from)
+      } catch (err) {
+        console.error('❌ Answer handling error:', err)
+      }
+    })
+    
+    socket.current.on('ice-candidate', async ({ candidate, from }) => {
+      console.log('🧊 Received ICE candidate from:', from)
+      
+      const pc = peerConnections.current.get(from)
+      if (!pc) return
+      
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate))
+      } catch (err) {
+        console.error('❌ ICE candidate error:', err)
+      }
+    })
+    
+    // User left
+    socket.current.on('user-left', ({ socketId }) => {
+      console.log('👋 User left:', socketId)
+      setParticipants(prev => prev.filter(p => p.socketId !== socketId))
+      
+      // Close and remove peer connection
+      const pc = peerConnections.current.get(socketId)
+      if (pc) {
+        pc.close()
+        peerConnections.current.delete(socketId)
+      }
+      
+      // Remove remote stream
+      remoteStreams.current.delete(socketId)
+      
+      // Remove audio analyser
+      audioAnalysers.current.delete(socketId)
+    })
+    
+    // Active speaker from remote
+    socket.current.on('active-speaker', ({ socketId }) => {
+      setActiveSpeaker(socketId)
+      
+      // Clear after timeout
+      if (activeSpeakerTimeout.current) {
+        clearTimeout(activeSpeakerTimeout.current)
+      }
+      activeSpeakerTimeout.current = setTimeout(() => {
+        setActiveSpeaker(null)
+      }, 1500)
+    })
+    
+    // Session ended by someone
+    socket.current.on('session-ended', ({ endedBy, role }) => {
+      console.log(`🛑 Session ended by ${endedBy} (${role})`)
+      
+      // IMMEDIATELY stop all media tracks
+      stopAllMedia()
+      
+      setSessionEnded(true)
+      setError(`تم إنهاء الجلسة من قبل ${endedBy}`)
+      
+      // Close connections after media stopped
+      setTimeout(() => {
+        cleanup()
+      }, 500)
     })
   }
 
-  const createPeerConnection = () => {
-    peerConnection.current = new RTCPeerConnection(ICE_SERVERS)
+  const createPeerConnection = (socketId, participant, shouldOffer) => {
+    console.log(`🔗 Creating peer connection with ${socketId} (offer: ${shouldOffer})`)
+    console.log('📊 Participant info:', participant)
+    console.log('📊 Local stream available:', !!localStream.current)
+    
+    if (localStream.current) {
+      const tracks = localStream.current.getTracks()
+      console.log('📊 Local stream tracks:', tracks.map(t => `${t.kind} (enabled: ${t.enabled}, state: ${t.readyState})`))
+    }
+    
+    const pc = new RTCPeerConnection(ICE_SERVERS)
+    peerConnections.current.set(socketId, pc)
+    console.log('✅ Peer connection created and stored')
     
     // Add local stream tracks
     if (localStream.current) {
+      const addedTracks = []
       localStream.current.getTracks().forEach(track => {
-        peerConnection.current.addTrack(track, localStream.current)
+        console.log(`➕ Adding local ${track.kind} track to peer ${socketId}`)
+        const sender = pc.addTrack(track, localStream.current)
+        addedTracks.push({kind: track.kind, senderId: sender.id})
       })
+      console.log('✅ Added tracks:', addedTracks)
+    } else {
+      console.error('❌ No local stream available to add tracks!')
     }
     
-    // Handle remote stream
-    remoteStream.current = new MediaStream()
-    peerConnection.current.ontrack = (event) => {
-      console.log('📺 Remote track received')
-      event.streams[0].getTracks().forEach(track => {
-        remoteStream.current.addTrack(track)
+    // Handle incoming tracks
+    pc.ontrack = (event) => {
+      console.log('📺 Remote track from:', socketId, event.track.kind)
+      console.log('📺 Track details:', {
+        kind: event.track.kind,
+        id: event.track.id,
+        enabled: event.track.enabled,
+        readyState: event.track.readyState,
+        muted: event.track.muted
       })
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = remoteStream.current
+      console.log('📺 Streams count:', event.streams.length)
+      
+      if (event.streams && event.streams[0]) {
+        const stream = event.streams[0]
+        const streamTracks = stream.getTracks()
+        console.log('📺 Stream tracks:', streamTracks.map(t => `${t.kind} (${t.readyState})`))
+        
+        remoteStreams.current.set(socketId, stream)
+        console.log('✅ Remote stream stored for:', socketId)
+        
+        // Setup speaker detection for remote stream
+        if (event.track.kind === 'audio') {
+          setupActiveSpeakerDetection(stream, socketId)
+        }
+        
+        // Mark this remote stream as ready and trigger re-render
+        setRemoteStreamsReady(prev => {
+          const updated = {
+            ...prev,
+            [socketId]: true
+          }
+          console.log('📊 Remote streams ready:', updated)
+          return updated
+        })
+        
+        console.log(`✅ Remote stream ready for ${socketId}`)
+      } else {
+        console.warn('⚠️ No streams in ontrack event for:', socketId)
       }
     }
     
     // Handle ICE candidates
-    peerConnection.current.onicecandidate = (event) => {
+    pc.onicecandidate = (event) => {
       if (event.candidate) {
         socket.current.emit('ice-candidate', {
           candidate: event.candidate,
-          roomId
+          roomId,
+          to: socketId
         })
       }
     }
     
     // Monitor connection state
-    peerConnection.current.onconnectionstatechange = () => {
-      const state = peerConnection.current.connectionState
-      console.log('🔗 Connection state:', state)
-      
-      if (state === 'connected') {
-        setConnectionStatus('connected')
-        console.log('🎉 Peer connected successfully!')
-      } else if (state === 'connecting') {
-        setConnectionStatus('connecting')
-      } else if (state === 'disconnected' || state === 'failed') {
-        setConnectionStatus('disconnected')
-        console.error('❌ Connection failed or disconnected')
-      }
+    pc.onconnectionstatechange = () => {
+      console.log(`🔗 Connection state with ${socketId}:`, pc.connectionState)
     }
     
-    // Monitor ICE connection state
-    peerConnection.current.oniceconnectionstatechange = () => {
-      console.log('🧊 ICE connection state:', peerConnection.current.iceConnectionState)
+    // If we should create offer (we're the existing user)
+    if (shouldOffer) {
+      createOffer(socketId)
     }
   }
 
-  const createOffer = async () => {
-    const offer = await peerConnection.current.createOffer()
-    await peerConnection.current.setLocalDescription(offer)
-    socket.current.emit('offer', { offer, roomId })
+  const createOffer = async (socketId) => {
+    console.log('📤 Creating offer for:', socketId)
+    const pc = peerConnections.current.get(socketId)
+    
+    if (!pc) {
+      console.error('❌ No peer connection found for:', socketId)
+      return
+    }
+    
+    console.log('📊 Peer connection state:', pc.connectionState)
+    console.log('📊 Signaling state:', pc.signalingState)
+    
+    try {
+      console.log('📝 Creating offer...')
+      const offer = await pc.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true
+      })
+      console.log('✅ Offer created')
+      
+      console.log('📝 Setting local description...')
+      await pc.setLocalDescription(offer)
+      console.log('✅ Local description set')
+      
+      console.log('📤 Sending offer to:', socketId)
+      socket.current.emit('offer', { offer, roomId, to: socketId })
+      console.log('✅ Offer sent successfully')
+    } catch (err) {
+      console.error('❌ Create offer error:', err)
+      console.error('❌ Error details:', err.message)
+    }
   }
 
   const toggleCamera = () => {
@@ -252,6 +590,13 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
         alert('شروط الجلسات القضائية: يلزم إبقاء الكاميرا مفتوحة طوال مدة الجلسة ولا يُسمح بإغلاقها.')
         return
       }
+      if (videoTrack) {
+        console.log('📹 Camera ON (مطلوبة)')
+      } else {
+        console.warn('⚠️ No video track found')
+      }
+    } else {
+      console.warn('⚠️ No local stream')
     }
   }
 
@@ -261,22 +606,65 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled
         setIsMicOn(audioTrack.enabled)
+        console.log(`🎤 Microphone ${audioTrack.enabled ? 'ON' : 'OFF'}`)
+      } else {
+        console.warn('⚠️ No audio track found')
       }
+    } else {
+      console.warn('⚠️ No local stream')
     }
   }
 
-  const endMeeting = async () => {
+  // Stop all media immediately (camera + mic)
+  const stopAllMedia = () => {
+    console.log('🛑 Stopping all media tracks...')
+
+    if (localStream.current) {
+      localStream.current.getTracks().forEach(track => {
+        console.log(`⏹️ Stopping ${track.kind} track`)
+        track.stop()
+        track.enabled = false
+      })
+    }
+
+    remoteStreams.current.forEach((stream) => {
+      stream.getTracks().forEach(track => {
+        track.stop()
+        track.enabled = false
+      })
+    })
+
+    setIsCameraOn(false)
+    setIsMicOn(false)
+    console.log('✅ All media stopped')
+  }
+
+  const endSession = () => {
+    if (confirm('هل أنت متأكد من إنهاء الجلسة؟\nسيتم إنهاء الجلسة لجميع المشاركين.')) {
+      console.log('🛑 Ending session for everyone')
+      stopAllMedia()
+      socket.current.emit('end-session', { roomId })
+      setTimeout(() => {
+        analyzeSession()
+      }, 1000)
+    }
+  }
+
+  const endMeeting = () => {
     if (!isChair) {
       alert('وفق شروط الجلسات القضائية: لا يجوز إنهاء الجلسة أو إيقاف التسجيل إلا من قبل رئيس الجلسة فقط.')
       return
     }
+    endSession()
+  }
+
+  const analyzeSession = async () => {
     setIsAnalyzing(true)
     
     // Stop recording
     if (mediaRecorder.current && mediaRecorder.current.state !== 'inactive') {
       mediaRecorder.current.stop()
       
-      // Wait for recording to finish
       await new Promise(resolve => {
         mediaRecorder.current.onstop = resolve
       })
@@ -292,7 +680,7 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
   const uploadAndAnalyze = async () => {
     try {
       if (audioChunks.current.length === 0) {
-        setError('No audio recorded')
+        setError('لم يتم تسجيل صوت')
         return
       }
       
@@ -307,136 +695,688 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
       console.log('📤 Uploading audio...')
       const uploadResponse = await axios.post(`${API_SERVER}/upload-audio`, formData)
       
-      const audioFile = uploadResponse.data
+      const audioFile = {
+        ...uploadResponse.data,
+        role: userRole
+      }
       
-      // Analyze
-      console.log('🤖 Analyzing...')
-      const analysisResponse = await axios.post(`${API_SERVER}/analyze`, {
-        audioFiles: [audioFile]
+      // Generate Session Content Report
+      console.log('📊 Generating Session Content Report...')
+      const reportResponse = await axios.post(`${API_SERVER}/generate-session-report`, {
+        audioFiles: [audioFile],
+        roomId: roomId
       })
       
-      setAnalysis(analysisResponse.data)
-      console.log('✅ Analysis complete')
+      if (reportResponse.data.success) {
+        setSessionReport(reportResponse.data.report)
+        console.log('✅ Session Content Report generated')
+      } else {
+        throw new Error(reportResponse.data.error || 'Report generation failed')
+      }
       
     } catch (err) {
-      console.error('❌ Analysis error:', err)
-      setError('Failed to analyze meeting: ' + err.message)
+      console.error('❌ Report generation error:', err)
+      setError('فشل إنشاء تقرير الجلسة: ' + (err.response?.data?.error || err.message))
     } finally {
       setIsAnalyzing(false)
     }
   }
 
-  const cleanup = () => {
-    if (localStream.current) {
-      localStream.current.getTracks().forEach(track => track.stop())
+  // Dress Code Monitoring (MVP - Lawyers Only)
+  const startDressCodeMonitoring = () => {
+    // Check every 15 seconds
+    dressCodeCheckInterval.current = setInterval(() => {
+      performDressCodeCheck()
+    }, 15000)
+    
+    // Initial check after 5 seconds
+    setTimeout(() => {
+      performDressCodeCheck()
+    }, 5000)
+  }
+
+  const performDressCodeCheck = async () => {
+    // Only check for lawyers
+    if (userRole !== 'lawyer') return
+    
+    // Don't spam checks (minimum 60 seconds between warnings)
+    const now = Date.now()
+    if (now - lastDressCodeCheck < 60000) {
+      return
     }
-    if (peerConnection.current) {
-      peerConnection.current.close()
-    }
-    if (socket.current) {
-      socket.current.disconnect()
+    
+    try {
+      // Capture frame from local video
+      const frame = captureVideoFrame()
+      if (!frame) return
+      
+      console.log('👔 Checking dress code...')
+      
+      // Send to backend
+      const response = await axios.post(`${API_SERVER}/check-dress-code`, {
+        imageBase64: frame,
+        role: userRole
+      })
+      
+      if (response.data.success && response.data.result) {
+        const { compliant, warning } = response.data.result
+        
+        if (!compliant && warning) {
+          // Show warning
+          setDressCodeWarning(warning)
+          setLastDressCodeCheck(now)
+          
+          // Auto-hide after 10 seconds
+          setTimeout(() => {
+            setDressCodeWarning(null)
+          }, 10000)
+          
+          console.log('⚠️ Dress code warning:', warning)
+        } else if (compliant) {
+          // Hide warning if now compliant
+          setDressCodeWarning(null)
+          console.log('✅ Dress code compliant')
+        }
+      }
+      
+    } catch (err) {
+      console.error('❌ Dress code check error:', err)
+      // Silently fail - don't disturb the session
     }
   }
 
+  const captureVideoFrame = () => {
+    try {
+      if (!localVideoRef.current) return null
+      
+      // Create canvas
+      const canvas = document.createElement('canvas')
+      const video = localVideoRef.current
+      
+      canvas.width = video.videoWidth || 640
+      canvas.height = video.videoHeight || 480
+      
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+      
+      // Convert to base64 (JPEG for smaller size)
+      const base64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1]
+      
+      return base64
+      
+    } catch (err) {
+      console.error('❌ Frame capture error:', err)
+      return null
+    }
+  }
+
+  const cleanup = () => {
+    console.log('🧹 Cleaning up resources...')
+    
+    // Stop all media tracks if not already stopped
+    if (localStream.current) {
+      localStream.current.getTracks().forEach(track => {
+        if (track.readyState === 'live') {
+          track.stop()
+        }
+      })
+      localStream.current = null
+    }
+    
+    // Close all peer connections
+    peerConnections.current.forEach((pc, socketId) => {
+      console.log(`🔌 Closing connection with ${socketId}`)
+      pc.close()
+    })
+    peerConnections.current.clear()
+    
+    // Clear remote streams
+    remoteStreams.current.forEach((stream, socketId) => {
+      stream.getTracks().forEach(track => {
+        if (track.readyState === 'live') {
+          track.stop()
+        }
+      })
+    })
+    remoteStreams.current.clear()
+    
+    // Clear audio analysers
+    audioAnalysers.current.clear()
+    
+    // Close audio context
+    if (audioContext.current && audioContext.current.state !== 'closed') {
+      audioContext.current.close()
+    }
+    
+    // Disconnect socket
+    if (socket.current) {
+      socket.current.disconnect()
+    }
+    
+    console.log('✅ Cleanup complete')
+  }
+
+  // Render functions
+  const getRoleLabel = (role) => {
+    const roleLabels = {
+      'chair': 'رئيس الجلسة',
+      'secretary': 'أمين السر',
+      'judge': 'القاضي',
+      'lawyer': 'المحامي',
+      'party': 'طرف معني',
+      'participant': 'مشارك'
+    };
+    return roleLabels[role] || role;
+  };
+
+  // Loading/Analyzing screen
   if (isAnalyzing) {
     return (
       <div className="app">
         <div className="loading">
           <div className="loading-spinner"></div>
-          <h2>Analyzing Meeting...</h2>
-          <p>Transcribing audio and generating summary</p>
-          <p style={{fontSize: '14px', marginTop: '10px', color: '#666'}}>This may take a minute...</p>
+          <h2>جاري إنشاء تقرير محتوى الجلسة...</h2>
+          <p>جاري نسخ الصوت وإنشاء الملخص المحايد</p>
+          <p style={{fontSize: '14px', marginTop: '10px', color: '#666'}}>قد يستغرق هذا دقيقة...</p>
+          <p style={{fontSize: '12px', marginTop: '5px', color: '#999'}}>سيتم حذف التسجيلات الصوتية فوراً بعد المعالجة</p>
         </div>
       </div>
     )
   }
 
-  if (analysis) {
+  // Session Report screen
+  if (sessionReport) {
     return (
       <div className="app">
         <div className="header">
-          <h1>📊 Meeting Analysis</h1>
+          <h1>📊 تقرير محتوى الجلسة</h1>
+          <p style={{fontSize: '14px', opacity: 0.8}}>Session Content Report</p>
         </div>
         
         <div className="analysis">
-          <h2>Meeting Summary</h2>
-          
           {error && <div className="error">{error}</div>}
           
+          {/* Disclaimer */}
+          <div style={{
+            background: '#fff3cd',
+            border: '2px solid #ffc107',
+            borderRadius: '8px',
+            padding: '15px',
+            marginBottom: '20px',
+            textAlign: 'center'
+          }}>
+            <p style={{margin: 0, fontSize: '14px', color: '#856404'}}>
+              <strong>⚖️ إخلاء مسؤولية:</strong> {sessionReport.metadata?.disclaimer}
+            </p>
+            <p style={{margin: '5px 0 0 0', fontSize: '12px', color: '#856404'}}>
+              {sessionReport.metadata?.processing_note}
+            </p>
+          </div>
+
+          {/* Session Info */}
           <div className="analysis-section">
-            <h3>📝 Summary</h3>
-            <p>{analysis.analysis?.summary || 'No summary available'}</p>
+            <h3>📋 معلومات الجلسة</h3>
+            <div style={{background: '#f8f9fa', padding: '15px', borderRadius: '8px'}}>
+              <p><strong>رقم الجلسة:</strong> {sessionReport.session_info?.room_id}</p>
+              <p><strong>تاريخ البداية:</strong> {new Date(sessionReport.session_info?.start_time).toLocaleString('ar-SA')}</p>
+              <p><strong>تاريخ النهاية:</strong> {new Date(sessionReport.session_info?.end_time).toLocaleString('ar-SA')}</p>
+              <p><strong>المدة:</strong> {Math.floor(sessionReport.session_info?.duration_seconds / 60)} دقيقة و {sessionReport.session_info?.duration_seconds % 60} ثانية</p>
+              <p><strong>عدد المشاركين:</strong> {sessionReport.session_info?.participants?.length}</p>
+            </div>
           </div>
           
+          {/* Executive Summary */}
           <div className="analysis-section">
-            <h3>🎤 Transcriptions</h3>
-            {analysis.transcriptions?.map((t, i) => (
-              <div key={i} className="transcript-item">
-                <div className="participant-name">{t.participantId}</div>
-                <div>{t.text}</div>
-              </div>
-            ))}
+            <h3>📝 الملخص التنفيذي</h3>
+            <div style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              padding: '20px',
+              borderRadius: '8px',
+              lineHeight: '1.8'
+            }}>
+              <p style={{margin: 0}}>{sessionReport.executive_summary}</p>
+            </div>
           </div>
-          
-          <div className="analysis-section">
-            <h3>🔑 Key Points</h3>
-            {analysis.analysis?.keyPoints?.map((kp, i) => (
-              <div key={i} style={{marginBottom: '20px'}}>
-                <h4 style={{color: '#667eea', marginBottom: '10px'}}>{kp.participant}</h4>
-                <ul className="key-points">
-                  {kp.points?.map((point, j) => (
-                    <li key={j}>{point}</li>
-                  ))}
-                </ul>
+
+          {/* Timeline */}
+          {sessionReport.timeline && sessionReport.timeline.length > 0 && (
+            <div className="analysis-section">
+              <h3>📅 الجدول الزمني للأحداث</h3>
+              <div style={{position: 'relative', paddingRight: '30px'}}>
+                {sessionReport.timeline.map((event, i) => (
+                  <div key={i} style={{
+                    position: 'relative',
+                    paddingBottom: '20px',
+                    borderRight: i < sessionReport.timeline.length - 1 ? '2px solid #667eea' : 'none'
+                  }}>
+                    <div style={{
+                      position: 'absolute',
+                      right: '-7px',
+                      top: '5px',
+                      width: '12px',
+                      height: '12px',
+                      borderRadius: '50%',
+                      background: '#667eea',
+                      border: '2px solid white',
+                      boxShadow: '0 0 0 2px #667eea'
+                    }}></div>
+                    <div style={{
+                      background: '#f8f9fa',
+                      padding: '10px 15px',
+                      borderRadius: '8px',
+                      marginRight: '20px'
+                    }}>
+                      <div style={{fontSize: '12px', color: '#666', marginBottom: '5px'}}>
+                        {new Date(event.timestamp).toLocaleTimeString('ar-SA')}
+                      </div>
+                      <div style={{fontWeight: 'bold', color: '#667eea', marginBottom: '3px'}}>
+                        {getRoleLabel(event.role)}
+                      </div>
+                      <div>{event.description}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+          )}
+
+          {/* NEW: Detailed Speech Log - من قال ماذا */}
+          {sessionReport.detailed_speech_log && sessionReport.detailed_speech_log.length > 0 && (
+            <div className="analysis-section">
+              <h3>🗣️ سجل الكلام التفصيلي - من قال ماذا</h3>
+              <div style={{
+                background: '#e3f2fd',
+                padding: '15px',
+                borderRadius: '8px',
+                marginBottom: '15px'
+              }}>
+                <p style={{margin: 0, fontSize: '14px', color: '#1565c0'}}>
+                  <strong>📝 ملاحظة:</strong> {sessionReport.metadata?.speech_log_note}
+                </p>
+                <p style={{margin: '5px 0 0 0', fontSize: '12px', color: '#1976d2'}}>
+                  إجمالي عدد المداخلات: {sessionReport.detailed_speech_log.length}
+                </p>
+              </div>
+              
+              <div style={{maxHeight: '600px', overflowY: 'auto', padding: '10px'}}>
+                {sessionReport.detailed_speech_log.map((entry, i) => {
+                  const roleColors = {
+                    'judge': '#1976d2',
+                    'lawyer': '#388e3c',
+                    'party': '#f57c00',
+                    'participant': '#5e35b1'
+                  };
+                  const color = roleColors[entry.role] || '#666';
+                  
+                  return (
+                    <div key={i} style={{
+                      background: '#ffffff',
+                      border: `2px solid ${color}`,
+                      borderRadius: '12px',
+                      padding: '15px',
+                      marginBottom: '15px',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    }}>
+                      {/* Header */}
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '10px',
+                        paddingBottom: '10px',
+                        borderBottom: `1px solid ${color}40`
+                      }}>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                          <div style={{
+                            background: color,
+                            color: 'white',
+                            padding: '5px 12px',
+                            borderRadius: '20px',
+                            fontSize: '13px',
+                            fontWeight: 'bold'
+                          }}>
+                            {getRoleLabel(entry.role)}
+                          </div>
+                          <div style={{
+                            fontSize: '14px',
+                            fontWeight: 'bold',
+                            color: '#333'
+                          }}>
+                            {entry.speaker}
+                          </div>
+                        </div>
+                        <div style={{
+                          fontSize: '12px',
+                          color: '#666',
+                          direction: 'ltr'
+                        }}>
+                          {new Date(entry.timestamp).toLocaleTimeString('ar-SA')}
+                          {entry.duration_seconds > 0 && (
+                            <span style={{marginLeft: '10px'}}>
+                              ({entry.duration_seconds}s)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Speech Content */}
+                      <div style={{
+                        fontSize: '15px',
+                        lineHeight: '1.7',
+                        color: '#333',
+                        padding: '10px',
+                        background: '#f8f9fa',
+                        borderRadius: '8px',
+                        direction: 'rtl',
+                        textAlign: 'right'
+                      }}>
+                        "{entry.speech}"
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Role Summaries */}
+          {sessionReport.role_summaries && sessionReport.role_summaries.length > 0 && (
+            <div className="analysis-section">
+              <h3>👥 ملخصات حسب الدور</h3>
+              {sessionReport.role_summaries.map((roleSummary, i) => (
+                <div key={i} style={{
+                  background: '#f8f9fa',
+                  padding: '15px',
+                  borderRadius: '8px',
+                  marginBottom: '10px',
+                  borderRight: '4px solid #667eea'
+                }}>
+                  <h4 style={{color: '#667eea', marginBottom: '10px', marginTop: 0}}>
+                    {getRoleLabel(roleSummary.role)}
+                  </h4>
+                  <p style={{margin: 0}}>{roleSummary.summary}</p>
+                  <p style={{margin: '10px 0 0 0', fontSize: '12px', color: '#666'}}>
+                    عدد البيانات: {roleSummary.statement_count}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Report metadata */}
+          <div style={{
+            background: '#e9ecef',
+            padding: '10px',
+            borderRadius: '8px',
+            fontSize: '12px',
+            color: '#666',
+            textAlign: 'center',
+            marginTop: '20px'
+          }}>
+            <p style={{margin: 0}}>
+              تم إنشاء التقرير في: {new Date(sessionReport.generated_at).toLocaleString('ar-SA')}
+            </p>
+            <p style={{margin: '5px 0 0 0'}}>
+              معرف التقرير: {sessionReport.session_info?.session_id}
+            </p>
           </div>
           
           <button 
             className="control-btn"
-            style={{background: '#667eea', color: 'white', marginTop: '20px'}}
+            style={{background: '#667eea', color: 'white', marginTop: '20px', width: '100%'}}
             onClick={onLeave}
           >
-            Back to Lobby
+            العودة للصفحة الرئيسية
           </button>
         </div>
       </div>
     )
   }
 
+  // Session ended screen
+  if (sessionEnded) {
+    return (
+      <div className="app">
+        <div className="header">
+          <h1>🛑 تم إنهاء الجلسة</h1>
+        </div>
+        <div className="loading">
+          <div style={{
+            background: '#fff3cd',
+            border: '2px solid #ffc107',
+            borderRadius: '8px',
+            padding: '20px',
+            marginBottom: '20px',
+            textAlign: 'center'
+          }}>
+            <h2 style={{margin: '0 0 10px 0', color: '#856404'}}>تم إنهاء الجلسة من قبل أحد الأطراف</h2>
+            <p style={{margin: '10px 0', fontSize: '16px', color: '#856404'}}>{error}</p>
+            <div style={{
+              background: '#d4edda',
+              border: '1px solid #c3e6cb',
+              borderRadius: '6px',
+              padding: '15px',
+              marginTop: '15px'
+            }}>
+              <p style={{margin: 0, fontSize: '14px', color: '#155724'}}>
+                ✅ تم إيقاف الكاميرا والمايكروفون تلقائياً
+              </p>
+              <p style={{margin: '5px 0 0 0', fontSize: '12px', color: '#155724'}}>
+                Camera and microphone have been stopped
+              </p>
+            </div>
+          </div>
+          <button 
+            className="control-btn"
+            style={{background: '#667eea', color: 'white', padding: '15px 30px', fontSize: '16px'}}
+            onClick={onLeave}
+          >
+            العودة للصفحة الرئيسية
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Main meeting screen - Many-to-Many
   return (
     <div className="app">
       <div className="header">
-        <h1>🎥 WebRTC Meeting</h1>
-        <p>Room: {roomId}</p>
+        <h1>🎥 الجلسة القضائية الإلكترونية</h1>
+        <p>الجلسة: {roomId} | المشاركون: {participants.length + 1}</p>
       </div>
       
       <div className="meeting">
         {error && <div className="error">{error}</div>}
         
-        <div className="status-bar">
-          <div className="status-info">
-            <div className={`status-badge ${connectionStatus}`}>
-              {connectionStatus === 'connected' && '✅ Connected'}
-              {connectionStatus === 'connecting' && '⏳ Connecting...'}
-              {connectionStatus === 'disconnected' && '❌ Disconnected'}
+        {/* Dress Code Warning (Lawyers Only - MVP Feature) */}
+        {dressCodeWarning && userRole === 'lawyer' && (
+          <div style={{
+            position: 'fixed',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)',
+            color: '#000',
+            padding: '15px 25px',
+            borderRadius: '12px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            zIndex: 9999,
+            maxWidth: '500px',
+            textAlign: 'center',
+            animation: 'fadeIn 0.3s ease-in',
+            border: '2px solid #daa520'
+          }}>
+            <div style={{display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center'}}>
+              <span style={{fontSize: '24px'}}>👔</span>
+              <div style={{textAlign: 'right'}}>
+                <div style={{fontWeight: 'bold', fontSize: '14px', marginBottom: '5px'}}>
+                  تنبيه اللباس النظامي
+                </div>
+                <div style={{fontSize: '13px'}}>
+                  {dressCodeWarning}
+                </div>
+              </div>
             </div>
-            <span>Room: <strong>{roomId}</strong></span>
           </div>
+        )}
+        
+        {/* Video Grid - Dynamic based on participant count */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: participants.length === 0 ? '1fr' : 
+                               participants.length === 1 ? 'repeat(2, 1fr)' :
+                               participants.length <= 3 ? 'repeat(2, 1fr)' :
+                               'repeat(3, 1fr)',
+          gap: '15px',
+          padding: '20px',
+          maxWidth: '1400px',
+          margin: '0 auto'
+        }}>
+          {/* Local video */}
+          <div style={{
+            position: 'relative',
+            backgroundColor: '#000',
+            borderRadius: '12px',
+            overflow: 'hidden',
+            boxShadow: activeSpeaker === 'local' ? '0 0 0 4px #4CAF50' : '0 4px 6px rgba(0,0,0,0.1)',
+            transition: 'box-shadow 0.3s ease'
+          }}>
+            <video 
+              ref={localVideoRef} 
+              autoPlay 
+              muted 
+              playsInline 
+              style={{width: '100%', height: '100%', objectFit: 'cover'}}
+            />
+            <div style={{
+              position: 'absolute',
+              bottom: '10px',
+              left: '10px',
+              background: 'rgba(0,0,0,0.7)',
+              color: 'white',
+              padding: '5px 10px',
+              borderRadius: '6px',
+              fontSize: '14px'
+            }}>
+              👤 {userName} (أنت)
+            </div>
+            {activeSpeaker === 'local' && (
+              <div style={{
+                position: 'absolute',
+                top: '10px',
+                right: '10px',
+                background: '#4CAF50',
+                color: 'white',
+                padding: '5px 10px',
+                borderRadius: '6px',
+                fontSize: '12px',
+                fontWeight: 'bold'
+              }}>
+                🎤 يتحدث الآن
+              </div>
+            )}
+            <div style={{
+              position: 'absolute',
+              top: '10px',
+              left: '10px',
+              background: 'rgba(103, 126, 234, 0.9)',
+              color: 'white',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '12px'
+            }}>
+              {getRoleLabel(userRole)}
+            </div>
+          </div>
+
+          {/* Remote videos */}
+          {participants.map((participant) => {
+            const stream = remoteStreams.current.get(participant.socketId)
+            const isStreamReady = remoteStreamsReady[participant.socketId]
+            const isActive = activeSpeaker === participant.socketId
+            
+            return (
+              <div key={participant.socketId} style={{
+                position: 'relative',
+                backgroundColor: '#000',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                boxShadow: isActive ? '0 0 0 4px #4CAF50' : '0 4px 6px rgba(0,0,0,0.1)',
+                transition: 'box-shadow 0.3s ease',
+                minHeight: '300px'
+              }}>
+                {stream && isStreamReady ? (
+                  <video 
+                    autoPlay 
+                    playsInline 
+                    style={{width: '100%', height: '100%', objectFit: 'cover'}}
+                    ref={(el) => {
+                      if (el && stream && !el.srcObject) {
+                        el.srcObject = stream
+                      }
+                    }}
+                  />
+                ) : (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '300px',
+                    color: '#fff',
+                    flexDirection: 'column',
+                    gap: '10px'
+                  }}>
+                    <div className="loading-spinner"></div>
+                    <div>⏳ جاري الاتصال...</div>
+                  </div>
+                )}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '10px',
+                  left: '10px',
+                  background: 'rgba(0,0,0,0.7)',
+                  color: 'white',
+                  padding: '5px 10px',
+                  borderRadius: '6px',
+                  fontSize: '14px'
+                }}>
+                  👤 {participant.participantId}
+                </div>
+                {isActive && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '10px',
+                    background: '#4CAF50',
+                    color: 'white',
+                    padding: '5px 10px',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+                  }}>
+                    🎤 يتحدث الآن
+                  </div>
+                )}
+                <div style={{
+                  position: 'absolute',
+                  top: '10px',
+                  left: '10px',
+                  background: 'rgba(103, 126, 234, 0.9)',
+                  color: 'white',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  fontSize: '12px'
+                }}>
+                  {getRoleLabel(participant.role)}
+                </div>
+              </div>
+            )
+          })}
         </div>
         
-        <div className="video-grid">
-          <div className="video-container">
-            <video ref={localVideoRef} autoPlay muted playsInline />
-            <div className="video-label">👤 {userName} — {userRole === 'chair' ? 'رئيس الجلسة' : userRole === 'secretary' ? 'أمين السر' : 'طرف معني'}</div>
-          </div>
-          
-          <div className="video-container">
-            <video ref={remoteVideoRef} autoPlay playsInline />
-            <div className="video-label">👤 {peerName}</div>
-          </div>
-        </div>
-        
+        {/* Controls */}
         <div className="controls">
           <button 
             className={`control-btn ${isCameraOn ? 'active' : 'inactive'}`}
@@ -450,16 +1390,38 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
             className={`control-btn ${isMicOn ? 'active' : 'inactive'}`}
             onClick={toggleMic}
           >
-            {isMicOn ? '🎤' : '🎤❌'} Microphone
+            {isMicOn ? '🎤' : '🎤❌'} المايكروفون
           </button>
           
           <button 
             className="control-btn end"
             onClick={endMeeting}
             title={isChair ? 'إنهاء الجلسة وتحليل المحاضر (رئيس الجلسة فقط)' : 'إنهاء الجلسة مسموح لرئيس الجلسة فقط'}
+            style={{background: '#dc3545'}}
           >
             📞 {isChair ? 'إنهاء الجلسة وتحليل المحاضر' : 'إنهاء الجلسة (رئيس الجلسة فقط)'}
           </button>
+        </div>
+
+        {/* Participants list */}
+        <div style={{
+          maxWidth: '600px',
+          margin: '20px auto',
+          padding: '15px',
+          background: '#f8f9fa',
+          borderRadius: '8px'
+        }}>
+          <h4 style={{margin: '0 0 10px 0', textAlign: 'center'}}>👥 المشاركون ({participants.length + 1})</h4>
+          <div style={{display: 'flex', flexDirection: 'column', gap: '5px'}}>
+            <div style={{padding: '8px', background: 'white', borderRadius: '6px'}}>
+              ✓ {userName} (أنت) - {getRoleLabel(userRole)}
+            </div>
+            {participants.map(p => (
+              <div key={p.socketId} style={{padding: '8px', background: 'white', borderRadius: '6px'}}>
+                ✓ {p.participantId} - {getRoleLabel(p.role)}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

@@ -5,6 +5,7 @@ import './index.css'
 function App() {
   const [sessionCode, setSessionCode] = useState('')
   const [displayName, setDisplayName] = useState('')
+  const [userRole, setUserRole] = useState('participant')
   const [joined, setJoined] = useState(false)
   const [error, setError] = useState('')
 
@@ -25,8 +26,8 @@ function App() {
       <WebRTCMeeting
         roomId={roomId}
         userName={userName}
-        userRole="party"
-        isChair={true}
+        userRole={userRole}
+        isChair={userRole === 'chair'}
         onLeave={() => setJoined(false)}
       />
     )
@@ -60,6 +61,25 @@ function App() {
           onKeyPress={e => e.key === 'Enter' && handleJoin()}
           dir="rtl"
         />
+        <select
+          value={userRole}
+          onChange={e => setUserRole(e.target.value)}
+          style={{
+            padding: '12px',
+            fontSize: '16px',
+            border: '2px solid #ddd',
+            borderRadius: '8px',
+            marginBottom: '15px',
+            width: '100%',
+            textAlign: 'right',
+            direction: 'rtl'
+          }}
+        >
+          <option value="chair">رئيس الجلسة</option>
+          <option value="secretary">أمين السر</option>
+          <option value="party">طرف معني</option>
+          <option value="participant">مشارك</option>
+        </select>
         {error && <div className="error" style={{ marginTop: '0.5rem' }}>{error}</div>}
         <button onClick={handleJoin}>
           الدخول للجلسة
