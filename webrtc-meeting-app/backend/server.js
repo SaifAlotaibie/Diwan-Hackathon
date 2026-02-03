@@ -5,7 +5,13 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { SESSION_RULES, validateArabicName, validateNationalId, validateMobile } = require('./session-rules');
 // const { transcribeAudio, analyzeTranscript } = require('./ai'); // Disabled for now
+
+const verificationCodes = new Map();
+function generateCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -60,8 +66,8 @@ io.on('connection', (socket) => {
     
     const room = rooms.get(roomId);
     
-    // Limit to 2 participants
-    if (room.size >= 2) {
+    const MAX_PARTICIPANTS = 10;
+    if (room.size >= MAX_PARTICIPANTS) {
       socket.emit('room-full');
       console.log(`❌ Room ${roomId} is full`);
       return;
@@ -118,6 +124,59 @@ io.on('connection', (socket) => {
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// شروط الجلسات المرئية القضائية — للواجهة والذكاء الاصطناعي/تدريب النماذج
+app.get('/session-rules', (req, res) => {
+  res.json(SESSION_RULES);
+});
+
+// التحقق من صحة بيانات الدخول (اسم عربي، هوية، جوال)
+app.post('/validate-join', (req, res) => {
+  const { fullName, nationalId, mobile } = req.body || {};
+  const nameResult = validateArabicName(fullName);
+  const idResult = validateNationalId(nationalId);
+  const mobileResult = validateMobile(mobile);
+  const valid = nameResult.valid && idResult.valid && mobileResult.valid;
+  res.json({
+    valid,
+    fullName: nameResult,
+    nationalId: idResult,
+    mobile: mobileResult
+  });
+});
+
+// إرسال رمز التحقق (محاكاة — للإنتاج ربط خدمة SMS حقيقية)
+app.post('/send-verification-code', (req, res) => {
+  const { mobile } = req.body || {};
+  const mobileResult = validateMobile(mobile);
+  if (!mobileResult.valid) {
+    return res.status(400).json({ success: false, message: mobileResult.message });
+  }
+  const code = generateCode();
+  const key = mobile.replace(/\D/g, '');
+  verificationCodes.set(key, { code, expiresAt: Date.now() + 5 * 60 * 1000 });
+  console.log(`[SMS Mock] رمز التحقق لـ ${key}: ${code}`);
+  res.json({ success: true, message: 'تم إرسال رمز التحقق إلى جوالك (محاكاة)' });
+});
+
+// التحقق من رمز SMS
+app.post('/verify-code', (req, res) => {
+  const { mobile, code } = req.body || {};
+  const key = (mobile || '').replace(/\D/g, '');
+  const stored = verificationCodes.get(key);
+  if (!stored) {
+    return res.status(400).json({ success: false, message: 'لم يتم إرسال رمز لهذا الرقم أو انتهت صلاحية الطلب' });
+  }
+  if (Date.now() > stored.expiresAt) {
+    verificationCodes.delete(key);
+    return res.status(400).json({ success: false, message: 'انتهت صلاحية رمز التحقق' });
+  }
+  if (String(code).trim() !== stored.code) {
+    return res.status(400).json({ success: false, message: 'رمز التحقق غير صحيح' });
+  }
+  verificationCodes.delete(key);
+  res.json({ success: true, message: 'تم التحقق بنجاح' });
 });
 
 // Upload audio file

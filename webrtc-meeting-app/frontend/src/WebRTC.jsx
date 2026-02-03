@@ -19,7 +19,7 @@ const ICE_SERVERS = {
   ]
 }
 
-function WebRTCMeeting({ roomId, userName, onLeave }) {
+function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, onLeave }) {
   const [connectionStatus, setConnectionStatus] = useState('connecting')
   const [isCameraOn, setIsCameraOn] = useState(true)
   const [isMicOn, setIsMicOn] = useState(true)
@@ -127,7 +127,7 @@ function WebRTCMeeting({ roomId, userName, onLeave }) {
     })
     
     socket.current.on('room-full', () => {
-      const errorMsg = '❌ Room is full! Maximum 2 participants allowed. Please use a different room ID.'
+      const errorMsg = '❌ الغرفة ممتلئة! الحد الأقصى للمشاركين 10. استخدم رقم جلسة آخر.'
       setError(errorMsg)
       setConnectionStatus('disconnected')
       alert(errorMsg)
@@ -243,9 +243,14 @@ function WebRTCMeeting({ roomId, userName, onLeave }) {
   const toggleCamera = () => {
     if (localStream.current) {
       const videoTrack = localStream.current.getVideoTracks()[0]
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled
-        setIsCameraOn(videoTrack.enabled)
+      if (videoTrack && !videoTrack.enabled) {
+        videoTrack.enabled = true
+        setIsCameraOn(true)
+        return
+      }
+      if (videoTrack && videoTrack.enabled) {
+        alert('شروط الجلسات القضائية: يلزم إبقاء الكاميرا مفتوحة طوال مدة الجلسة ولا يُسمح بإغلاقها.')
+        return
       }
     }
   }
@@ -261,6 +266,10 @@ function WebRTCMeeting({ roomId, userName, onLeave }) {
   }
 
   const endMeeting = async () => {
+    if (!isChair) {
+      alert('وفق شروط الجلسات القضائية: لا يجوز إنهاء الجلسة أو إيقاف التسجيل إلا من قبل رئيس الجلسة فقط.')
+      return
+    }
     setIsAnalyzing(true)
     
     // Stop recording
@@ -419,7 +428,7 @@ function WebRTCMeeting({ roomId, userName, onLeave }) {
         <div className="video-grid">
           <div className="video-container">
             <video ref={localVideoRef} autoPlay muted playsInline />
-            <div className="video-label">👤 {userName} (You)</div>
+            <div className="video-label">👤 {userName} — {userRole === 'chair' ? 'رئيس الجلسة' : userRole === 'secretary' ? 'أمين السر' : 'طرف معني'}</div>
           </div>
           
           <div className="video-container">
@@ -432,8 +441,9 @@ function WebRTCMeeting({ roomId, userName, onLeave }) {
           <button 
             className={`control-btn ${isCameraOn ? 'active' : 'inactive'}`}
             onClick={toggleCamera}
+            title="شروط الجلسة: الكاميرا مطلوبة طوال الجلسة ولا يُسمح بإغلاقها"
           >
-            {isCameraOn ? '📹' : '📹❌'} Camera
+            {isCameraOn ? '📹' : '📹❌'} الكاميرا (مطلوبة)
           </button>
           
           <button 
@@ -446,8 +456,9 @@ function WebRTCMeeting({ roomId, userName, onLeave }) {
           <button 
             className="control-btn end"
             onClick={endMeeting}
+            title={isChair ? 'إنهاء الجلسة وتحليل المحاضر (رئيس الجلسة فقط)' : 'إنهاء الجلسة مسموح لرئيس الجلسة فقط'}
           >
-            📞 End & Analyze
+            📞 {isChair ? 'إنهاء الجلسة وتحليل المحاضر' : 'إنهاء الجلسة (رئيس الجلسة فقط)'}
           </button>
         </div>
       </div>
