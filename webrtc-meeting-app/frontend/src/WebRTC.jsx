@@ -4,6 +4,11 @@ import axios from 'axios'
 
 // Server URL configuration
 const getServerURL = () => {
+  // In production, use environment variable
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL
+  }
+  
   // In development, always use localhost
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return 'http://localhost:3001'
@@ -15,8 +20,7 @@ const getServerURL = () => {
     return `http://${window.location.hostname}:3001`
   }
   
-  // Default to localhost for any other case (e.g., deployed site)
-  // You can change this to your production backend URL if deploying
+  // Fallback to localhost
   return 'http://localhost:3001'
 }
 
