@@ -1,131 +1,176 @@
-# Diwan Hackathon — Full Project
+# مشروع هاكاثون ديوان المظالم — منصة معين الرقمية
 
-This repository contains the **complete Diwan Hackathon project** for the Board of Grievances (BOG). It is a digital judicial services ecosystem: Moeen digital platform, court sessions (multi-party video/audio), hackathon website, Diwan platform page, and structured data for chatbots and AI.
-
-The project is **not only** multi-party video calls; it includes portals, case submission flows, AI-assisted forms, session rules and validation, and data for training or integrating AI.
+هذا المستودع يضم **مشروع هاكاثون ديوان المظالم** (Board of Grievances): بوابات الخدمات الإلكترونية، منصة معين الرقمية، خدمة الجلسات القضائية (فيديو/صوت)، وموقع الهاكاثون. الواجهات بالعربية واتجاه RTL مع تصميم موحد (Tailwind، ألوان الديوان، خط تاجاوال).
 
 ---
 
-## Table of Contents
+## محتويات المستودع
 
-1. [Project Overview](#project-overview)
-2. [Repository Structure](#repository-structure)
-3. [Components](#components)
-4. [Moeen Digital Platform](#moeen-digital-platform-moenhtml)
-5. [Diwan Platform Page](#diwan-platform-page-diwan-platformhtml)
-6. [Court Sessions App](#court-sessions-app-webrtc-meeting-app)
-7. [Hackathon Website](#hackathon-website)
-8. [BOG Chatbot Data](#bog-chatbot-data)
-9. [Prerequisites & Setup](#prerequisites--setup)
-10. [Tech Stack](#tech-stack)
-11. [License & Support](#license--support)
+| المكون | المسار | الوظيفة |
+|--------|--------|----------|
+| منصة معين | `moen.html` | بوابة الخدمات القضائية: بوابات رئيسية، فلاتر وبحث، بطاقات خدمات وروابط للتقديم والجلسات |
+| موقع الهاكاثون | `hackathon-site/` | الصفحة الرئيسية، الخدمات الإلكترونية، صفحة الجلسات؛ نقطة البداية لرحلة المستخدم |
+| تطبيق الجلسات | `webrtc-meeting-app/` | جلسات قضائية متعددة الأطراف (WebRTC)، الدخول برمز جلسة ٦ أرقام |
+| بيانات الشات بوت | `bog_chatbot_data/` | بيانات منظمة (أسئلة شائعة، أنظمة) للتكامل مع الشات بوت أو الذكاء الاصطناعي |
 
 ---
 
-## Project Overview
+## رحلة المستخدم الشاملة: من الخدمات الإلكترونية إلى الجلسات القضائية
 
-The Diwan Hackathon project delivers:
-
-- **Moeen digital platform** — A single-page portal for Moeen judicial services: hero, main gates, filterable services list, **submit case** flow with court choice, split-screen form (parties data + case details with AI analysis), add-plaintiff modal, and AI Voice Agent panel.
-- **Diwan platform page** — A dedicated Diwan platform HTML page (design and content for the broader BOG digital presence).
-- **Court sessions app** — Multi-party video/audio sessions over WebRTC. Participants join by a **6-digit session code** only (no ID or session name required); everyone with the same code is placed in the same session. Includes session rules, camera-on enforcement, and end-and-analyze flow.
-- **Hackathon website** — Static site (home, about, services, contact, Moeen sessions) with RTL/Arabic and BOG-aligned design.
-- **BOG chatbot data** — Structured JSON (FAQs, regulations) for chatbot or LLM integration and training.
-
-Together these form one **full project** for the hackathon: portals, forms, AI features, real-time sessions, and data.
+توثيق كامل بالعربية لرحلة المستخدم في بوابة ديوان المظالم، بدءاً من صفحة الخدمات الإلكترونية، مروراً بمنصة معين الرقمية، ووصولاً إلى خدمة الجلسات القضائية الإلكترونية.
 
 ---
 
-## Repository Structure
+### نظرة عامة على الرحلة
+
+| المرحلة | الصفحة | الرابط/المسار |
+|--------|--------|----------------|
+| ١ | الخدمات الإلكترونية | `hackathon-site/services.html` |
+| ٢ | منصة معين الرقمية | `moen.html` |
+| ٣ | الجلسات القضائية الإلكترونية | `hackathon-site/maeen-sessions.html` |
+
+---
+
+### المرحلة الأولى: صفحة الخدمات الإلكترونية
+
+**الملف:** `hackathon-site/services.html`
+
+#### ماذا يرى المستخدم؟
+
+1. **شريط التقدم العلوي**  
+   شريط رفيع بلون التمييز (أخضر فاتح) يعكس نسبة التمرير في الصفحة.
+
+2. **الهيدر**  
+   خلفية باللون الأساسي (أخضر ديوان المظالم)، مع رابط «عن الديوان» المؤدي إلى `index.html`، وعنوان «الخدمات الإلكترونية».
+
+3. **قسم بوابة ديوان المظالم**  
+   تعريف مختصر بالديوان: هيئة قضاء إداري مستقلة، ورسالتها إرساء العدل والإنصاف والرقابة القضائية.
+
+4. **قسم كلمة معالي الرئيس**  
+   صورة معالي الرئيس الدكتور خالد بن محمد اليوسف مع كلمة معالي الرئيس ونصها الكامل.
+
+5. **قسم الخدمات الإلكترونية**  
+   شبكة بطاقات للخدمات:
+   - **منصة معين الرقمية** — مع زر «الدخول للخدمة» يوجّه إلى منصة معين.
+   - منصة التنفيذ الإدارية — «قريباً».
+   - تقديم طلب لقاء معالي الرئيس — «قريباً».
+   - راسل رئيس الديوان — «قريباً».
+
+#### الإجراء المطلوب للانتقال إلى معين
+
+- المستخدم يضغط على **بطاقة «منصة معين الرقمية»** أو على نص **«الدخول للخدمة»** داخل البطاقة.
+- **التحويل:** ينتقل إلى صفحة `moen.html` (منصة معين الرقمية).  
+  الرابط المستخدم: `../moen.html` (نسبي من مجلد `hackathon-site` إلى جذر المشروع حيث يقع `moen.html`).
+
+---
+
+### المرحلة الثانية: منصة معين الرقمية
+
+**الملف:** `moen.html`
+
+#### ماذا يرى المستخدم؟
+
+1. **شريط التقدم**  
+   نفس فكرة شريط التقدم كما في صفحة الخدمات.
+
+2. **قسم البطل (Hero)**  
+   عنوان رئيسي: «تجربة أوضح وأسهل للوصول إلى الخدمات القضائية»، مع وصف لمنصة معين وزرين:
+   - «الدخول إلى نظام معين» (رابط خارجي للمنصة الرسمية).
+   - «استكشاف الخدمات القضائية» (تمرير إلى قسم الخدمات في نفس الصفحة).
+
+3. **البوابات الرئيسية في معين**  
+   - **الخدمات القضائية (للمسجلين):** زر يفتح قائمة الخدمات داخل الصفحة.
+   - **بوابة الجهات الحكومية:** رابط خارجي لبوابة الجهات.
+
+4. **قسم «أهم الخدمات في نظام معين»**  
+   - فلاتر: «كل الخدمات» | «خدمات المسجلين فقط» | «الخدمات القضائية لغير المسجلين».
+   - حقل بحث: «ابحث باسم الخدمة...».
+   - شبكة بطاقات خدمات، منها:
+     - **الجلسات القضائية الإلكترونية** (بطاقة قابلة للنقر).
+
+#### بطاقة «الجلسات القضائية الإلكترونية»
+
+- **النص التوجيهي:** «اضغط على البطاقة لإظهار المواد المساعدة قبل بدء التقديم.»
+- عند **الضغط على البطاقة** تظهر أزرار:
+  - **«فتح الخدمة»** — ينقل إلى صفحة الجلسات القضائية الإلكترونية.
+  - «الدليل الإرشادي» — رابط PDF خارجي.
+  - «المقطع المرئي» — رابط فيديو خارجي.
+
+#### الإجراء المطلوب للانتقال إلى الجلسات
+
+1. المستخدم يضغط على **بطاقة «الجلسات القضائية الإلكترونية»** لإظهار الأزرار.
+2. يضغط على **«فتح الخدمة»**.
+3. **التحويل:** ينتقل إلى `hackathon-site/maeen-sessions.html`.  
+   الرابط المستخدم من `moen.html`: `hackathon-site/maeen-sessions.html`.
+
+---
+
+### المرحلة الثالثة: خدمة الجلسات القضائية الإلكترونية
+
+**الملف:** `hackathon-site/maeen-sessions.html`
+
+#### ماذا يرى المستخدم؟
+
+1. **شريط التقدم**  
+   نفس النمط المستخدم في الصفحات السابقة.
+
+2. **الهيدر**  
+   عنوان: «منصة معين الرقمية — الجلسات الإلكترونية» بلون التمييز على خلفية اللون الأساسي.
+
+3. **قسم عنوان الخدمة**  
+   - أيقونة الميزان ⚖ داخل دائرة بلون التمييز.
+   - عنوان: «خدمة الجلسات القضائية الإلكترونية».
+   - وصف: «حضور الجلسات القضائية عن بُعد بتقنية الفيديو والصوت».
+
+4. **منطقة المحتوى الرئيسي**  
+   إطار (iframe) يعرض تطبيق الجلسات (مصدره محلياً: `http://localhost:5173` في بيئة التطوير)، مما يمكّن المستخدم من:
+   - حضور الجلسات عن بُعد.
+   - استخدام الكاميرا والميكروفون والإذن الكامل عند الحاجة.
+
+5. **الفوتر**  
+   «منصة معين الرقمية»، «الجلسات القضائية الإلكترونية — مشروع الهاكاثون»، وحقوق النشر © 2026 ديوان المظالم.
+
+---
+
+### ملخص مسار الرحلة
 
 ```
-Diwan-Hackathon/
-├── README.md                   # This file (full project, English)
-├── moen.html                   # Moeen digital platform
-├── diwan-platform.html         # Diwan platform page
-├── Moeen.svg                   # Moeen logo
-├── agent.PNG                   # AI agent image (Moeen)
-├── webrtc-meeting-app/         # Court sessions (WebRTC)
-│   ├── backend/                # Node.js + Express + Socket.IO
-│   │   ├── server.js
-│   │   ├── session-rules.js    # Court session rules (validation / AI)
-│   │   └── SESSION_RULES_README.md
-│   └── frontend/               # React + Vite + WebRTC
-│       ├── src/
-│       │   ├── App.jsx         # Lobby: session code join
-│       │   └── WebRTC.jsx      # Meeting UI & WebRTC
-│       └── public/
-├── hackathon-site/             # Static hackathon website
-│   ├── index.html, about.html, contact.html, services.html
-│   ├── maeen-sessions.html
-│   └── assets/, data/, styles.css, script.js
-└── bog_chatbot_data/           # Chatbot / LLM data
-    └── complete_bog_data.json
+صفحة الخدمات الإلكترونية (services.html)
+         │
+         │  ضغط «منصة معين الرقمية» / «الدخول للخدمة»
+         ▼
+منصة معين الرقمية (moen.html)
+         │
+         │  ضغط بطاقة «الجلسات القضائية الإلكترونية»
+         │  ثم ضغط «فتح الخدمة»
+         ▼
+صفحة الجلسات القضائية الإلكترونية (maeen-sessions.html)
+         │
+         └── استخدام تطبيق الجلسات داخل الصفحة (iframe)
 ```
 
 ---
 
-## Components
+### الروابط التقنية بين الصفحات
 
-| Component           | Path                      | Role in full project |
-|--------------------|---------------------------|----------------------|
-| Moeen Platform     | `/moen.html`              | Judicial services portal: submit case, services, AI agent, forms |
-| Diwan Platform     | `/diwan-platform.html`    | BOG Diwan platform page |
-| Court Sessions     | `/webrtc-meeting-app/`    | Multi-party court sessions (join by code); one part of the ecosystem |
-| Hackathon Website  | `/hackathon-site/`        | Public hackathon site |
-| BOG Chatbot Data   | `/bog_chatbot_data/`      | Data for chatbots and AI |
+| من | إلى | العنصر | الرابط/المسار |
+|----|-----|--------|----------------|
+| `services.html` | منصة معين | بطاقة منصة معين + «الدخول للخدمة» | `../moen.html` |
+| `moen.html` | الجلسات القضائية | زر «فتح الخدمة» داخل بطاقة الجلسات | `hackathon-site/maeen-sessions.html` |
+| `maeen-sessions.html` | تطبيق الجلسات | محتوى iframe (تطوير) | `http://localhost:5173` |
 
 ---
 
-## Moeen Digital Platform (`moen.html`)
+## تشغيل المشروع
 
-Single-page portal for **Moeen** digital judicial services (BOG).
+### تشغيل موقع الهاكاثون وصفحات معين
 
-### Features
+- افتح `hackathon-site/index.html` أو `hackathon-site/services.html` من المتصفح (أو من خادم ثابت).
+- للانتقال إلى منصة معين: من صفحة الخدمات اضغط «منصة معين الرقمية» أو افتح `moen.html` مباشرة.
 
-- **Hero & main gates:** Entry to “Registered users services” and “Government entities gateway.”
-- **Services section:** Filters (All / Registered only / Unregistered only), search, and service cards with links to official Moeen services.
-- **Submit case flow:**
-  1. **Court choice modal:** User selects court (e.g. Administrative Digital Court), accepts declaration, then confirms.
-  2. **Split-screen form** (shown only after choosing the Administrative Digital Court):
-     - **Right:** Green panel with AI Voice Agent and “Enable Voice Agent.”
-     - **Left:** Multi-step form.
-- **Form steps:**
-  - **Step 1 — Parties data:** Plaintiff data, representatives, defendant, authentication. “Next” goes to step 2.
-  - **Step 2 — Case details:** Description textarea and “AI analysis” button (mock: situation, concerned parties, expected parties for next step). “Previous” / “Next.”
-- **Add plaintiff modal:** “Add plaintiff” opens a modal to choose plaintiff type (individual, association, government entity, company, etc.). Confirm adds the plaintiff (demo).
-- **Analytics & footer:** Links to indicators/dashboards and footer.
+### تشغيل تطبيق الجلسات القضائية
 
-### How to run
-
-- Open `moen.html` in a browser (file or static server). Ensure `Moeen.svg` and `agent.PNG` are in the same directory.
-
-### Tech
-
-- HTML5, Tailwind CSS (CDN), GSAP (ScrollTrigger), Tajawal font. No build step.
-
----
-
-## Diwan Platform Page (`diwan-platform.html`)
-
-Dedicated page for the Diwan (BOG) platform: structure, content, and design for the broader BOG digital presence. Open in a browser like `moen.html`.
-
----
-
-## Court Sessions App (`webrtc-meeting-app`)
-
-**One part of the full project:** multi-party court sessions over WebRTC. Participants join using **only a 6-digit session code**; no ID or session name. Same code = same room.
-
-### Features
-
-- **Lobby:** Single screen: “Session code (6 digits)” and optional “Display name.” Button “Join session.”
-- **Linking by code:** Everyone entering the same 6-digit code joins the same session (room ID = code).
-- **In-session:** Video/audio (WebRTC), camera/mic controls, “End session & analyze” (recordings/analysis). Camera-on reminder; session rules supported on backend.
-- **Backend:** Session rules API (`GET /session-rules`), room limit 10, optional validation and mock SMS endpoints for future use.
-
-### Run instructions
-
-**Backend (Terminal 1):**
+**الخادم (الطرفية الأولى):**
 
 ```bash
 cd webrtc-meeting-app/backend
@@ -133,9 +178,9 @@ npm install
 npm start
 ```
 
-Server: `http://localhost:3001`.
+يعمل الخادم على `http://localhost:3001`.
 
-**Frontend (Terminal 2):**
+**واجهة التطبيق (الطرفية الثانية):**
 
 ```bash
 cd webrtc-meeting-app/frontend
@@ -143,98 +188,27 @@ npm install
 npm run dev
 ```
 
-App: `http://localhost:5173/` (and network URL from Vite).
+التطبيق على `http://localhost:5173`. صفحة الجلسات `maeen-sessions.html` تعرض هذا العنوان داخل iframe.
 
-**Usage:** Open the app in one or more tabs/devices; enter the **same** 6-digit code to join the same session.
-
-### Backend endpoints
-
-| Method | Path             | Description                    |
-|--------|------------------|--------------------------------|
-| GET    | `/health`        | Health check                  |
-| GET    | `/session-rules` | Court session rules (UI / AI) |
-| GET    | `/rooms`         | Active rooms (debug)          |
-| POST   | `/upload-audio`  | Upload audio                  |
-| POST   | `/analyze`       | Analyze meeting               |
-
-Session rules and validation: `backend/session-rules.js`. AI/model use: `backend/SESSION_RULES_README.md`.
-
-### Tech
-
-- Frontend: React 18, Vite, Socket.IO client, Axios. Backend: Node.js, Express, Socket.IO, Multer. Media: WebRTC, STUN.
+**الاستخدام:** ادخل نفس رمز الجلسة (٦ أرقام) من جهازين أو نافذتين للانضمام إلى نفس الجلسة.
 
 ---
 
-## Hackathon Website
+## التقنيات المستخدمة
 
-**Path:** `hackathon-site/`
-
-Static site: homepage, about, services, contact, Moeen sessions page. RTL/Arabic, BOG-aligned design. Open `index.html` or serve the folder with any static server.
-
----
-
-## BOG Chatbot Data
-
-**Path:** `bog_chatbot_data/`
-
-- `complete_bog_data.json`: Structured FAQs, regulations, and content for chatbot or LLM integration and training.
+| الطبقة | التقنيات |
+|--------|----------|
+| صفحات معين والهاكاثون | HTML5، Tailwind CSS (CDN)، خط تاجاوال، RTL |
+| تطبيق الجلسات | React، Vite، Socket.IO، WebRTC |
+| الخادم | Node.js، Express، Socket.IO |
 
 ---
 
-## Prerequisites & Setup
+## الترخيص والدعم
 
-### Prerequisites
-
-- **Node.js** 18+ (for the court sessions app only).
-- Modern browser (Chrome/Firefox/Edge) for WebRTC and HTML pages.
-- Git (optional).
-
-### Clone
-
-```bash
-git clone <repo-url>
-cd Diwan-Hackathon
-```
-
-### Run court sessions app
-
-```bash
-# Terminal 1 — backend
-cd webrtc-meeting-app/backend
-npm install
-npm start
-
-# Terminal 2 — frontend
-cd webrtc-meeting-app/frontend
-npm install
-npm run dev
-```
-
-Then open **http://localhost:5173/** and join with a 6-digit session code.
-
-### Run Moeen, Diwan platform, hackathon site
-
-- **Moeen:** Open `moen.html` in the browser.
-- **Diwan platform:** Open `diwan-platform.html` in the browser.
-- **Hackathon site:** Open `hackathon-site/index.html` or serve the folder.
+- **الترخيص:** MIT — للاستخدام في إطار الهاكاثون والتعليم.
+- **الدعم:** راجع هذا الملف للتعرف على المشروع ورحلة المستخدم؛ لتفاصيل قواعد الجلسات والذكاء الاصطناعي راجع `webrtc-meeting-app/backend/SESSION_RULES_README.md`.
 
 ---
 
-## Tech Stack
-
-| Layer           | Technologies |
-|-----------------|--------------|
-| Moeen / Diwan   | HTML5, Tailwind CSS (CDN), GSAP, Tajawal |
-| Court sessions  | React, Vite, Socket.IO, WebRTC, Axios |
-| Backend         | Node.js, Express, Socket.IO, Multer |
-| Data            | JSON (chatbot, session rules) |
-| Languages       | JavaScript; Arabic (UI); English (this README and code comments) |
-
----
-
-## License & Support
-
-- **License:** MIT — use for hackathon and education.
-- **Support:** See this README for the full project; see `webrtc-meeting-app/backend/SESSION_RULES_README.md` for session rules and AI usage.
-
-Built for **Board of Grievances (BOG) Hackathon**.
+*مشروع هاكاثون ديوان المظالم — منصة معين الرقمية — آخر تحديث: فبراير ٢٠٢٦*
