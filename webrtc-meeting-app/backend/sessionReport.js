@@ -89,31 +89,64 @@ async function transcribeAudio(audioFilePath) {
     // Add prompt to help with Arabic context (judicial/legal terminology)
     formData.append('prompt', 'جلسة قضائية في ديوان المظالم. المحكمة، القاضي، المحامي، الدعوى، المدعي، المدعى عليه.');
     
-    // Call OpenAI Whisper API
-    const response = await axios.post(
-      `${OPENAI_API_URL}/audio/transcriptions`,
-      formData,
-      {
-        headers: {
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
-          ...formData.getHeaders()
-        },
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity,
-        timeout: 120000 // 2 minutes timeout for large files
+    // Call OpenAI Whisper API with retry logic
+    let lastError = null;
+    const maxRetries = 2;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 Transcription attempt ${attempt}/${maxRetries}...`);
+        
+        const response = await axios.post(
+          `${OPENAI_API_URL}/audio/transcriptions`,
+          formData,
+          {
+            headers: {
+              'Authorization': `Bearer ${OPENAI_API_KEY}`,
+              ...formData.getHeaders()
+            },
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity,
+            timeout: 60000, // 1 minute timeout
+            validateStatus: (status) => status < 500 // Don't throw on 4xx errors
+          }
+        );
+        
+        // Check if response is successful
+        if (response.status !== 200) {
+          throw new Error(`API returned status ${response.status}: ${JSON.stringify(response.data)}`);
+        }
+        
+        console.log('✅ Transcription complete');
+        console.log(`📊 Detected language: ${response.data.language || 'ar'}`);
+        console.log(`📝 Text length: ${response.data.text?.length || 0} characters`);
+        console.log(`🎯 Segments: ${response.data.segments?.length || 0}`);
+        
+        return {
+          text: response.data.text,
+          segments: response.data.segments || [],
+          language: response.data.language || 'ar'
+        };
+        
+      } catch (err) {
+        lastError = err;
+        console.error(`❌ Attempt ${attempt} failed:`, err.message);
+        
+        // If it's a network error and we have retries left, wait and retry
+        if (attempt < maxRetries && (err.code === 'ENOTFOUND' || err.code === 'ETIMEDOUT' || err.code === 'ECONNREFUSED')) {
+          console.log(`⏳ Waiting 2 seconds before retry...`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          continue;
+        }
+        
+        // Otherwise, break and throw
+        break;
       }
-    );
+    }
     
-    console.log('✅ Transcription complete');
-    console.log(`📊 Detected language: ${response.data.language || 'ar'}`);
-    console.log(`📝 Text length: ${response.data.text?.length || 0} characters`);
-    console.log(`🎯 Segments: ${response.data.segments?.length || 0}`);
-    
-    return {
-      text: response.data.text,
-      segments: response.data.segments || [],
-      language: response.data.language || 'ar'
-    };
+    // All retries failed
+    console.error('❌ All transcription attempts failed:', lastError.message);
+    throw new Error(`Transcription failed after ${maxRetries} attempts: ${lastError.message}`);
     
   } catch (error) {
     console.error('❌ Transcription error:', error.response?.data || error.message);

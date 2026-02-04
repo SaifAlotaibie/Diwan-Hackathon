@@ -1,11 +1,19 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import io from 'socket.io-client'
 import axios from 'axios'
+import ComplianceMonitor from './ComplianceMonitor'
+import LiveAlerts from './LiveAlerts'
 
 // Environment-based backend URL
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
 const SOCKET_SERVER = API_BASE_URL
 const API_SERVER = API_BASE_URL
+
+// ✅ Debug: Log the URLs being used
+console.log('🔧 Configuration:')
+console.log('   API_BASE_URL:', API_BASE_URL)
+console.log('   SOCKET_SERVER:', SOCKET_SERVER)
+console.log('   API_SERVER:', API_SERVER)
 
 // STUN servers for NAT traversal
 const ICE_SERVERS = {
@@ -15,7 +23,7 @@ const ICE_SERVERS = {
   ]
 }
 
-function WebRTCMeeting({ roomId, userName, userRole, onLeave }) {
+function WebRTCMeeting({ roomId, userName, userRole, nationalId, officialAccountId, isChair = false, onLeave }) {
   // State for participants and connections
   const [participants, setParticipants] = useState([])
   const [remoteStreamsReady, setRemoteStreamsReady] = useState({})
@@ -27,9 +35,18 @@ function WebRTCMeeting({ roomId, userName, userRole, onLeave }) {
   const [isCameraOn, setIsCameraOn] = useState(true)
   const [isMicOn, setIsMicOn] = useState(true)
   
+  // Judicial session compliance states
+  const [recordsSaved, setRecordsSaved] = useState(false)
+  const [recordsConfirmed, setRecordsConfirmed] = useState(false)
+  const [showSaveRecordsWarning, setShowSaveRecordsWarning] = useState(false)
+  
   // Dress Code Check state (MVP feature - lawyers only)
   const [dressCodeWarning, setDressCodeWarning] = useState(null)
   const [lastDressCodeCheck, setLastDressCodeCheck] = useState(0)
+  
+  // Camera monitoring state
+  const [cameraWasOn, setCameraWasOn] = useState(true)
+  const cameraMonitorInterval = useRef(null)
   
   // Refs
   const socket = useRef(null)
@@ -220,15 +237,35 @@ function WebRTCMeeting({ roomId, userName, userRole, onLeave }) {
   }, [roomId, userName, userRole])
 
   const initializeSocket = () => {
-    socket.current = io(SOCKET_SERVER)
+    console.log('🔌 Connecting to Socket.IO server:', SOCKET_SERVER)
+    
+    socket.current = io(SOCKET_SERVER, {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
+    })
     
     socket.current.on('connect', () => {
-      console.log('🔌 Socket connected')
+      console.log('✅ Socket connected successfully!')
+      console.log('   Socket ID:', socket.current.id)
+      console.log('   Room ID:', roomId)
+      console.log('   Participant:', userName)
+      
       socket.current.emit('join-room', { 
         roomId, 
         participantId: userName,
         role: userRole 
       })
+    })
+    
+    socket.current.on('connect_error', (error) => {
+      console.error('❌ Socket connection error:', error)
+      console.error('   Trying to connect to:', SOCKET_SERVER)
+    })
+    
+    socket.current.on('disconnect', (reason) => {
+      console.log('🔌 Socket disconnected:', reason)
     })
     
     socket.current.on('room-users', (existingParticipants) => {
@@ -429,8 +466,24 @@ function WebRTCMeeting({ roomId, userName, userRole, onLeave }) {
     if (localStream.current) {
       const videoTrack = localStream.current.getVideoTracks()[0]
       if (videoTrack) {
+        // ✅ السماح بإطفاء الكاميرا
         videoTrack.enabled = !videoTrack.enabled
         setIsCameraOn(videoTrack.enabled)
+        setCameraWasOn(videoTrack.enabled)
+        
+        // 🚨 إذا تم إطفاء الكاميرا، أرسل تنبيه فوراً
+        if (!videoTrack.enabled && socket.current) {
+          console.log('📹 Camera turned off by user, broadcasting alert...')
+          
+          // إرسال التنبيه لجميع المشاركين
+          socket.current.emit('camera-off-detected', {
+            roomId: roomId,
+            participantId: userName,
+            role: userRole
+          })
+          
+          // ✅ بدون alert مزعج - التنبيه يظهر فقط في LiveAlerts
+        }
       }
     }
   }
@@ -465,6 +518,13 @@ function WebRTCMeeting({ roomId, userName, userRole, onLeave }) {
   }
 
   const endSession = () => {
+    // Enforce record finalization for session chair
+    if (isChair && !recordsConfirmed) {
+      setShowSaveRecordsWarning(true)
+      alert('⚠️ وفقاً لقواعد الجلسات القضائية:\\n\\nلا يمكن لرئيس الجلسة إنهاء الجلسة قبل:\\n✓ حفظ جميع المحاضر المطلوبة\\n✓ تأكيد حفظ المحاضر\\n\\nيرجى حفظ وتأكيد المحاضر أولاً.')
+      return
+    }
+    
     if (confirm('هل أنت متأكد من إنهاء الجلسة؟\\nسيتم إنهاء الجلسة لجميع المشاركين.')) {
       stopAllMedia()
       socket.current.emit('end-session', { roomId })
@@ -472,6 +532,27 @@ function WebRTCMeeting({ roomId, userName, userRole, onLeave }) {
       setTimeout(() => {
         analyzeSession()
       }, 1000)
+    }
+  }
+  
+  const saveRecords = () => {
+    // Simulate saving records
+    if (confirm('هل تم حفظ جميع المحاضر المطلوبة؟')) {
+      setRecordsSaved(true)
+      alert('✅ تم حفظ المحاضر بنجاح')
+    }
+  }
+  
+  const confirmRecords = () => {
+    if (!recordsSaved) {
+      alert('⚠️ يجب حفظ المحاضر أولاً قبل التأكيد')
+      return
+    }
+    
+    if (confirm('هل أنت متأكد من تأكيد المحاضر؟\\nلن يمكن التعديل بعد التأكيد.')) {
+      setRecordsConfirmed(true)
+      setShowSaveRecordsWarning(false)
+      alert('✅ تم تأكيد المحاضر. يمكنك الآن إنهاء الجلسة.')
     }
   }
 
@@ -542,32 +623,72 @@ function WebRTCMeeting({ roomId, userName, userRole, onLeave }) {
   }
 
   const performDressCodeCheck = async () => {
-    if (userRole !== 'lawyer') return
+    console.log('👔 performDressCodeCheck called')
+    console.log('   User role:', userRole)
+    console.log('   localVideoRef:', !!localVideoRef.current)
     
     const now = Date.now()
-    if (now - lastDressCodeCheck < 60000) {
+    const timeSinceLastCheck = now - lastDressCodeCheck
+    
+    // ✅ تقليل الحد الأدنى من 60 ثانية إلى 15 ثانية
+    if (timeSinceLastCheck < 15000) {
+      console.log(`   ⏭️ Skipping check (last check was ${Math.round(timeSinceLastCheck/1000)}s ago)`)
       return
     }
     
     try {
+      console.log('📸 Capturing video frame...')
       const frame = captureVideoFrame()
-      if (!frame) return
+      if (!frame) {
+        console.log('❌ No frame captured')
+        return
+      }
+      
+      console.log('✅ Frame captured, size:', frame.length, 'chars')
+      console.log('🔄 Sending to API...')
       
       const response = await axios.post(`${API_SERVER}/check-dress-code`, {
         imageBase64: frame,
         role: userRole
       })
       
+      console.log('📊 API Response:', response.data)
+      
       if (response.data.success && response.data.result) {
-        const { compliant, warning } = response.data.result
+        const { compliant, warning, warnings } = response.data.result
         
-        if (!compliant && warning) {
-          setDressCodeWarning(warning)
-          setLastDressCodeCheck(now)
-          
-          setTimeout(() => {
-            setDressCodeWarning(null)
-          }, 10000)
+        if (!compliant) {
+          // ✅ إذا كان هناك تنبيهات متعددة، اعرضهم واحد تلو الآخر
+          if (warnings && warnings.length > 0) {
+            console.log(`⚠️ ${warnings.length} violations detected:`, warnings)
+            
+            // عرض التنبيه الأول
+            setDressCodeWarning(warnings[0].message)
+            setLastDressCodeCheck(now)
+            
+            // عرض باقي التنبيهات بالتتابع
+            warnings.forEach((w, idx) => {
+              if (idx > 0) {
+                setTimeout(() => {
+                  setDressCodeWarning(w.message)
+                }, idx * 12000) // كل 12 ثانية
+              }
+            })
+            
+            // إخفاء آخر تنبيه بعد 10 ثوانٍ
+            setTimeout(() => {
+              setDressCodeWarning(null)
+            }, warnings.length * 12000 + 10000)
+            
+          } else if (warning) {
+            // fallback للكود القديم
+            setDressCodeWarning(warning)
+            setLastDressCodeCheck(now)
+            
+            setTimeout(() => {
+              setDressCodeWarning(null)
+            }, 10000)
+          }
         } else if (compliant) {
           setDressCodeWarning(null)
         }
@@ -585,13 +706,18 @@ function WebRTCMeeting({ roomId, userName, userRole, onLeave }) {
       const canvas = document.createElement('canvas')
       const video = localVideoRef.current
       
-      canvas.width = video.videoWidth || 640
-      canvas.height = video.videoHeight || 480
+      // ✅ تقليل الحجم لتقليل payload size (320x240 بدلاً من 640x480)
+      const targetWidth = 320
+      const targetHeight = 240
+      
+      canvas.width = targetWidth
+      canvas.height = targetHeight
       
       const ctx = canvas.getContext('2d')
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+      ctx.drawImage(video, 0, 0, targetWidth, targetHeight)
       
-      const base64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1]
+      // ✅ تقليل الجودة (0.5 بدلاً من 0.7) لتقليل الحجم
+      const base64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1]
       
       return base64
       
@@ -600,6 +726,74 @@ function WebRTCMeeting({ roomId, userName, userRole, onLeave }) {
       return null
     }
   }
+
+  // 🆕 مراقبة الكاميرا المستمرة - إرسال تنبيه فوري عند الإغلاق
+  useEffect(() => {
+    if (!localStream.current || !socket.current) return
+    
+    // مراقبة كل 3 ثوانٍ
+    cameraMonitorInterval.current = setInterval(() => {
+      const videoTrack = localStream.current?.getVideoTracks()[0]
+      
+      if (videoTrack) {
+        const isCameraOn = videoTrack.enabled && videoTrack.readyState === 'live'
+        
+        // إذا كانت الكاميرا مغلقة الآن ولكنها كانت مفتوحة سابقاً
+        if (!isCameraOn && cameraWasOn) {
+          console.log('🚨 Camera turned off detected!')
+          
+          // إرسال تنبيه فوري عبر Socket.IO
+          socket.current.emit('camera-off-detected', {
+            roomId: roomId,
+            participantId: userName,
+            role: userRole
+          })
+          
+          // تحديث الحالة
+          setIsCameraOn(false)
+          setCameraWasOn(false)
+          
+          // ✅ لا alert - التنبيه يظهر فقط في LiveAlerts
+        }
+        
+        // إذا أعيد تشغيل الكاميرا
+        if (isCameraOn && !cameraWasOn) {
+          setCameraWasOn(true)
+          setIsCameraOn(true)
+        }
+      }
+    }, 3000) // كل 3 ثوانٍ
+    
+    return () => {
+      if (cameraMonitorInterval.current) {
+        clearInterval(cameraMonitorInterval.current)
+      }
+    }
+  }, [localStream.current, socket.current, roomId, userName, userRole, cameraWasOn])
+
+  // 🆕 فحص الزي التلقائي - كل 15 ثانية
+  useEffect(() => {
+    if (!localStream.current) return
+    
+    console.log('👔 Starting automatic dress code check...')
+    
+    // فحص أول بعد 5 ثوانٍ
+    const initialTimeout = setTimeout(() => {
+      performDressCodeCheck()
+    }, 5000)
+    
+    // فحص دوري كل 15 ثانية
+    dressCodeCheckInterval.current = setInterval(() => {
+      performDressCodeCheck()
+    }, 15000)
+    
+    return () => {
+      clearTimeout(initialTimeout)
+      if (dressCodeCheckInterval.current) {
+        clearInterval(dressCodeCheckInterval.current)
+      }
+    }
+  }, [localStream.current])
 
   const cleanup = () => {
     if (localStream.current) {
@@ -933,6 +1127,83 @@ function WebRTCMeeting({ roomId, userName, userRole, onLeave }) {
             🛑 إنهاء الجلسة للجميع
           </button>
         </div>
+
+        {/* Record Management (Chair only) */}
+        {isChair && (
+          <div className="max-w-2xl mx-auto bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-lg shadow-lg p-6 mb-6">
+            <h4 className="text-xl font-bold text-center text-gray-800 mb-4 flex items-center justify-center gap-2">
+              <span>📝</span>
+              <span>إدارة المحاضر القضائية</span>
+            </h4>
+            
+            {showSaveRecordsWarning && (
+              <div className="bg-red-100 border-2 border-red-400 text-red-800 p-4 rounded-lg mb-4 animate-pulse">
+                <p className="font-bold text-center">⚠️ يجب حفظ وتأكيد المحاضر قبل إنهاء الجلسة</p>
+              </div>
+            )}
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-between bg-white p-4 rounded-lg">
+                <span className="font-semibold text-gray-800">حالة حفظ المحاضر:</span>
+                <span className={`px-4 py-2 rounded-full font-bold ${recordsSaved ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'}`}>
+                  {recordsSaved ? '✅ محفوظة' : '⏳ غير محفوظة'}
+                </span>
+              </div>
+              
+              <div className="flex items-center justify-between bg-white p-4 rounded-lg">
+                <span className="font-semibold text-gray-800">حالة تأكيد المحاضر:</span>
+                <span className={`px-4 py-2 rounded-full font-bold ${recordsConfirmed ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'}`}>
+                  {recordsConfirmed ? '✅ مؤكدة' : '⏳ غير مؤكدة'}
+                </span>
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={saveRecords}
+                  disabled={recordsSaved}
+                  className={`flex-1 py-3 px-4 rounded-lg font-bold transition-all ${
+                    recordsSaved 
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  💾 حفظ المحاضر
+                </button>
+                
+                <button
+                  onClick={confirmRecords}
+                  disabled={!recordsSaved || recordsConfirmed}
+                  className={`flex-1 py-3 px-4 rounded-lg font-bold transition-all ${
+                    !recordsSaved || recordsConfirmed
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                      : 'bg-green-600 hover:bg-green-700 text-white'
+                  }`}
+                >
+                  ✅ تأكيد المحاضر
+                </button>
+              </div>
+              
+              <p className="text-xs text-gray-600 text-center mt-2">
+                ⚖️ وفقاً لقواعد الجلسات القضائية: لا يمكن إنهاء الجلسة قبل حفظ وتأكيد جميع المحاضر
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Compliance Monitor (Chair only) */}
+        <ComplianceMonitor
+          isChair={isChair}
+          participants={participants}
+          localStream={localStream}
+          remoteStreams={remoteStreams}
+        />
+
+        {/* Live Alerts (All participants) */}
+        <LiveAlerts
+          socket={socket.current}
+          roomId={roomId}
+          isChair={isChair}
+        />
 
         {/* Participants list */}
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">

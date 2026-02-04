@@ -1,33 +1,57 @@
 import { useState } from 'react';
 import WebRTCMeeting from '../components/WebRTCMeeting';
+import SessionReadinessScreen from '../components/SessionReadinessScreen';
 
 export default function MaeenSessions() {
-  const [inSession, setInSession] = useState(false);
+  const [stage, setStage] = useState('form'); // 'form', 'readiness', 'session'
   const [sessionData, setSessionData] = useState(null);
+  const [userIdentity, setUserIdentity] = useState(null);
 
   const handleJoinSession = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     
-    setSessionData({
+    const data = {
       roomId: formData.get('roomId'),
       userName: formData.get('userName'),
       userRole: formData.get('userRole')
-    });
-    setInSession(true);
+    };
+    
+    setSessionData(data);
+    setStage('readiness'); // Go to readiness screen first
+  };
+
+  const handleReadinessProceed = (identity) => {
+    setUserIdentity(identity);
+    setStage('session'); // Proceed to actual session
   };
 
   const handleLeaveSession = () => {
-    setInSession(false);
+    setStage('form');
     setSessionData(null);
+    setUserIdentity(null);
   };
 
-  if (inSession && sessionData) {
+  // Show readiness screen
+  if (stage === 'readiness' && sessionData) {
+    return (
+      <SessionReadinessScreen
+        sessionData={sessionData}
+        onProceed={handleReadinessProceed}
+      />
+    );
+  }
+
+  // Show session
+  if (stage === 'session' && sessionData && userIdentity) {
     return (
       <WebRTCMeeting
         roomId={sessionData.roomId}
-        userName={sessionData.userName}
+        userName={userIdentity.fullName} // Use verified full name
         userRole={sessionData.userRole}
+        nationalId={userIdentity.nationalId}
+        officialAccountId={userIdentity.officialAccountId}
+        isChair={sessionData.userRole === 'chair' || sessionData.userRole === 'judge'}
         onLeave={handleLeaveSession}
       />
     );

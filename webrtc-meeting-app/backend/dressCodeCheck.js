@@ -35,20 +35,41 @@ async function analyzeDressCode(imageBase64) {
       throw new Error('OPENAI_API_KEY is not configured');
     }
     
-    // Strict prompt for clothing detection only
-    const prompt = `Analyze this image and return ONLY a JSON object indicating whether the following clothing items are present on the person:
-- thobe (traditional white/beige Saudi robe)
-- bisht (black cloak worn over thobe)
-- shemagh_or_ghutra (traditional Saudi headscarf, can be red/white checkered or white)
+    // ✅ Enhanced prompt focusing on Saudi traditional attire
+    const prompt = `You are an automated Saudi judicial dress code verification system.
 
-Rules:
-- Return booleans only (true/false)
-- Do NOT describe the person
-- Do NOT identify the person
-- Do NOT include opinions
-- Focus only on clothing presence
+ANALYZE the image and detect ONLY these items:
 
-Return format:
+1. THOBE (Saudi traditional robe):
+   - White, beige, gray, or light-colored long robe
+   - Must be visible
+   - Return TRUE if present, FALSE if not
+
+2. BISHT (Black/brown cloak):
+   - Black or dark brown cloak worn over thobe
+   - Only for judges and lawyers
+   - Return TRUE if present, FALSE if not
+
+3. SHEMAGH or GHUTRA (Saudi headwear) - CRITICAL:
+   - Shemagh: Red/white checkered headscarf
+   - Ghutra: White plain headscarf
+   - Agal: Black cord/rope on top of headwear
+   - ANY Saudi traditional headwear = TRUE
+   - Bare head or NO headwear = FALSE
+   - Hair visible WITHOUT headcover = FALSE
+
+⚠️ IMPORTANT:
+- Focus ESPECIALLY on headwear detection
+- If you see ANY traditional Saudi head covering = shemagh_or_ghutra: true
+- If head is uncovered/bare = shemagh_or_ghutra: false
+
+RULES:
+- Return ONLY JSON
+- NO descriptions
+- NO names
+- FOCUS on clothing presence
+
+REQUIRED FORMAT (strict JSON):
 {
   "thobe": true/false,
   "bisht": true/false,
@@ -78,7 +99,8 @@ Return format:
           }
         ],
         max_tokens: 150,
-        temperature: 0 // Deterministic output
+        temperature: 0, // Deterministic output
+        response_format: { type: "json_object" } // ✅ Force JSON response
       },
       {
         headers: {
@@ -90,17 +112,32 @@ Return format:
 
     // Parse Vision API response
     const content = response.data.choices[0].message.content;
-    console.log('📊 Vision API response:', content);
+    console.log('📊 Vision API raw response:', content);
     
-    // Extract JSON from response
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('Invalid response format from Vision API');
+    // Try to parse JSON directly (should work with response_format)
+    let result;
+    try {
+      result = JSON.parse(content);
+    } catch (parseErr) {
+      console.log('⚠️ Direct parse failed, trying to extract JSON...');
+      // Fallback: Extract JSON from response
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        console.error('❌ No JSON found in response');
+        throw new Error('Invalid response format from Vision API');
+      }
+      result = JSON.parse(jsonMatch[0]);
     }
     
-    const result = JSON.parse(jsonMatch[0]);
+    // Validate result has required fields
+    if (typeof result.thobe !== 'boolean' || 
+        typeof result.bisht !== 'boolean' || 
+        typeof result.shemagh_or_ghutra !== 'boolean') {
+      console.error('❌ Invalid result structure:', result);
+      throw new Error('Response missing required boolean fields');
+    }
     
-    console.log('✅ Dress code analysis complete:', result);
+    console.log('✅ Dress code analysis complete:', JSON.stringify(result));
     return result;
     
   } catch (error) {
@@ -116,34 +153,90 @@ Return format:
 function applyDressCodeRule(visionResult, role) {
   console.log('📋 Applying dress code rule...');
   console.log(`   Role: ${role}`);
-  console.log(`   Vision result:`, visionResult);
+  console.log(`   Vision result:`, JSON.stringify(visionResult, null, 2));
   
-  // Rule only applies to lawyers
-  if (role !== 'lawyer') {
-    console.log('ℹ️ Not a lawyer, no dress code check needed');
-    return {
-      compliant: true,
-      warning: null,
-      reason: 'rule_not_applicable'
-    };
+  // ✅ قواعد الزي حسب الدور مع تنبيهات منفصلة
+  const { thobe, bisht, shemagh_or_ghutra } = visionResult;
+  const warnings = [];
+  
+  // القضاة والمحامون: بشت + ثوب + شماغ/غترة
+  if (role === 'judge' || role === 'chair' || role === 'lawyer') {
+    
+    // ✅ تنبيه خاص للبشت
+    if (!bisht) {
+      warnings.push({
+        type: 'bisht',
+        message: '🎓 تنبيه هام: البشت القضائي مطلوب\n\nيجب ارتداء البشت (العباءة القضائية) السوداء فوق الثوب\n\nهذا جزء أساسي من الزي القضائي الرسمي',
+        severity: 'high',
+        item: 'بشت/عباءة قضائية'
+      });
+    }
+    
+    // ✅ تنبيه خاص للشماغ
+    if (!shemagh_or_ghutra) {
+      warnings.push({
+        type: 'headwear',
+        message: '👳 تنبيه: غطاء الرأس مطلوب\n\nيجب ارتداء الشماغ (أحمر/أبيض) أو الغترة (بيضاء) مع العقال\n\nوفقاً لقواعد الجلسات القضائية',
+        severity: 'high',
+        item: 'شماغ أو غترة'
+      });
+    }
+    
+    // تنبيه الثوب
+    if (!thobe) {
+      warnings.push({
+        type: 'thobe',
+        message: '👔 تنبيه: الثوب الرسمي مطلوب',
+        severity: 'high',
+        item: 'ثوب'
+      });
+    }
+    
+    if (warnings.length > 0) {
+      console.log('⚠️ Dress code not compliant. Warnings:', warnings.length);
+      return {
+        compliant: false,
+        warnings: warnings, // ✅ إرجاع تنبيهات متعددة
+        warning: warnings[0].message, // للتوافق مع الكود القديم
+        missingItems: warnings.map(w => w.item),
+        reason: 'missing_judicial_attire'
+      };
+    }
   }
   
-  // Check if all required items are present
-  const { thobe, bisht, shemagh_or_ghutra } = visionResult;
-  
-  const missingItems = [];
-  if (!thobe) missingItems.push('ثوب');
-  if (!bisht) missingItems.push('بشت');
-  if (!shemagh_or_ghutra) missingItems.push('شماغ أو غترة');
-  
-  if (missingItems.length > 0) {
-    console.log('⚠️ Dress code not compliant. Missing:', missingItems);
-    return {
-      compliant: false,
-      warning: 'تنبيه: يرجى الالتزام باللباس النظامي المعتمد أثناء الجلسة القضائية',
-      missingItems: missingItems,
-      reason: 'missing_items'
-    };
+  // الأطراف والمشاركون: ثوب + شماغ/غترة فقط (بدون بشت)
+  else if (role === 'party' || role === 'participant' || role === 'secretary') {
+    
+    // ✅ تنبيه خاص للشماغ
+    if (!shemagh_or_ghutra) {
+      warnings.push({
+        type: 'headwear',
+        message: '👳 تنبيه: غطاء الرأس مطلوب\n\nيجب ارتداء الشماغ (أحمر/أبيض) أو الغترة (بيضاء) مع العقال\n\nالزي السعودي الرسمي إلزامي في الجلسات القضائية',
+        severity: 'high',
+        item: 'شماغ أو غترة'
+      });
+    }
+    
+    // تنبيه الثوب
+    if (!thobe) {
+      warnings.push({
+        type: 'thobe',
+        message: '👔 تنبيه: الثوب السعودي الرسمي مطلوب\n\nيجب ارتداء الثوب الأبيض أو البيج',
+        severity: 'high',
+        item: 'ثوب'
+      });
+    }
+    
+    if (warnings.length > 0) {
+      console.log('⚠️ Dress code not compliant. Warnings:', warnings.length);
+      return {
+        compliant: false,
+        warnings: warnings, // ✅ إرجاع تنبيهات متعددة
+        warning: warnings[0].message, // للتوافق مع الكود القديم
+        missingItems: warnings.map(w => w.item),
+        reason: 'missing_formal_attire'
+      };
+    }
   }
   
   console.log('✅ Dress code compliant');

@@ -80,8 +80,8 @@ const io = socketIo(server, {
 
 // Middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' })); // ✅ زيادة الحد للصور
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
@@ -220,6 +220,52 @@ io.on('connection', (socket) => {
       participantId,
       role
     });
+  });
+
+  // 🆕 Compliance Alert Broadcasting
+  socket.on('compliance-alert', ({ roomId, alert }) => {
+    console.log(`⚠️ Compliance alert in room ${roomId}:`, alert.type);
+    
+    // Broadcast to all participants in the room
+    io.to(roomId).emit('compliance-alert-received', {
+      ...alert,
+      timestamp: new Date().toISOString(),
+      from: socket.participantId || 'System'
+    });
+  });
+
+  // 🆕 Camera Off Detection
+  socket.on('camera-off-detected', ({ roomId, participantId, role }) => {
+    console.log(`📹 Camera off detected: ${participantId} in room ${roomId}`);
+    
+    // Broadcast to all participants (especially the chair)
+    io.to(roomId).emit('camera-violation', {
+      type: 'camera_off',
+      participantId,
+      role,
+      severity: 'high',
+      message_ar: `⚠️ تنبيه: المشارك "${participantId}" قام بإغلاق الكاميرا`,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // 🆕 General Violation Report
+  socket.on('report-violation', ({ roomId, violation }) => {
+    console.log(`🚨 Violation reported in room ${roomId}:`, violation.type);
+    
+    // Broadcast to chair only or all participants based on severity
+    if (violation.notifyAll) {
+      io.to(roomId).emit('violation-notification', {
+        ...violation,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      // Send to chair only (you'll need to track chair socket ID)
+      io.to(roomId).emit('violation-notification-chair', {
+        ...violation,
+        timestamp: new Date().toISOString()
+      });
+    }
   });
 
   socket.on('disconnect', () => {
@@ -522,6 +568,106 @@ app.post('/check-dress-code', async (req, res) => {
     res.status(500).json({ 
       success: false,
       error: error.message 
+    });
+  }
+});
+
+// Environment and Behavior Monitoring (AI-powered)
+app.post('/analyze-session-environment', async (req, res) => {
+  try {
+    const { frames, participants } = req.body;
+    
+    if (!frames || frames.length === 0) {
+      return res.json({ alerts: [] });
+    }
+    
+    console.log('🔍 Analyzing session environment for', frames.length, 'participants');
+    
+    // Check if OpenAI is available
+    if (!process.env.OPENAI_API_KEY) {
+      console.warn('⚠️ OPENAI_API_KEY not set, skipping AI analysis');
+      return res.json({ alerts: [] });
+    }
+    
+    const OpenAI = require('openai');
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    
+    const alerts = [];
+    
+    // Analyze each participant's frame
+    for (const frame of frames) {
+      try {
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: `أنت نظام مراقبة امتثال للجلسات القضائية. مهمتك تحليل الصورة والكشف عن أي مخالفات لقواعد الجلسة القضائية:
+              
+1. **البيئة**: هل المشارك في بيئة مناسبة؟ (ليس في سيارة، شارع، مكان عام صاخب)
+2. **الانتباه**: هل المشارك منتبه أم مشتت؟ (استخدام هاتف، أكل، شرب، النظر بعيداً)
+3. **الزي الرسمي**: 
+   - القضاة والمحامون: زي قضائي رسمي
+   - الآخرون: زي سعودي رسمي (ثوب + شماغ/غترة)
+4. **السلوك**: هل يوجد تصرف غير لائق؟
+
+أجب بـ JSON فقط:
+{
+  "compliant": true/false,
+  "violations": ["نوع المخالفة"],
+  "severity": "low"/"medium"/"high",
+  "arabic_message": "رسالة تحذيرية رسمية بالعربية"
+}`
+            },
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: `تحليل المشارك: ${frame.participantId} (${frame.role})`
+                },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: `data:image/jpeg;base64,${frame.imageBase64}`
+                  }
+                }
+              ]
+            }
+          ],
+          max_tokens: 500,
+          response_format: { type: "json_object" }
+        });
+        
+        const analysis = JSON.parse(response.choices[0].message.content);
+        
+        if (!analysis.compliant && analysis.violations.length > 0) {
+          alerts.push({
+            participantId: frame.participantId,
+            role: frame.role,
+            socketId: frame.socketId,
+            violations: analysis.violations,
+            severity: analysis.severity || 'medium',
+            message_ar: analysis.arabic_message,
+            message: analysis.arabic_message
+          });
+        }
+        
+      } catch (err) {
+        console.error(`❌ Failed to analyze frame for ${frame.participantId}:`, err.message);
+      }
+    }
+    
+    console.log(`✅ Analysis complete. Found ${alerts.length} alerts`);
+    
+    res.json({ alerts });
+    
+  } catch (error) {
+    console.error('❌ Environment analysis error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message,
+      alerts: []
     });
   }
 });

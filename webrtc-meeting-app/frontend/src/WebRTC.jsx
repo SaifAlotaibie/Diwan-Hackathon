@@ -2,10 +2,22 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import io from 'socket.io-client'
 import axios from 'axios'
 
-// Use the current hostname (works for both localhost and IP)
+// Server URL configuration
 const getServerURL = () => {
-  const hostname = window.location.hostname
-  return `http://${hostname}:3001`
+  // In development, always use localhost
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:3001'
+  }
+  
+  // For local network access (e.g., from mobile device on same network)
+  // If accessing via IP address, use that IP for the backend
+  if (/^192\.168\.\d+\.\d+$/.test(window.location.hostname) || /^10\.\d+\.\d+\.\d+$/.test(window.location.hostname)) {
+    return `http://${window.location.hostname}:3001`
+  }
+  
+  // Default to localhost for any other case (e.g., deployed site)
+  // You can change this to your production backend URL if deploying
+  return 'http://localhost:3001'
 }
 
 const SOCKET_SERVER = getServerURL()
