@@ -367,3 +367,37 @@ body {
     min-width: 120px;
   }
 }
+
+/* Term Cards Hover Effects */
+.term-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.term-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(193, 227, 40, 0.15) 0%, rgba(33, 97, 71, 0.1) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+}
+
+.term-card:hover::before {
+  opacity: 1;
+}
+
+.term-card:hover {
+  border-color: #C1E328 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(33, 97, 71, 0.2);
+}
+
+.term-card > * {
+  position: relative;
+  z-index: 1;
+}
