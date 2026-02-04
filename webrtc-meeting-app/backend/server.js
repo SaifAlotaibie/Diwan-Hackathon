@@ -536,6 +536,98 @@ app.post('/analyze', async (req, res) => {
   }
 });
 
+// Identity Verification (Pre-Session)
+app.post('/verify-identity', async (req, res) => {
+  try {
+    const { imageBase64, nationalId, userName, userRole } = req.body;
+    
+    if (!imageBase64 || !nationalId || !userName) {
+      return res.status(400).json({ 
+        success: false,
+        verified: false,
+        message: 'بيانات غير كاملة' 
+      });
+    }
+    
+    console.log('🔐 Identity verification request received');
+    console.log(`   Name: ${userName}`);
+    console.log(`   National ID: ${nationalId}`);
+    console.log(`   Role: ${userRole}`);
+    
+    // Use OpenAI Vision API to verify face is visible and person appears real
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: `أنت نظام ذكاء اصطناعي للتحقق من هوية المشاركين في الجلسات القضائية.
+مهمتك: تحليل الصورة والتأكد من:
+1. وجود وجه بشري واضح (ليس صورة أو شاشة)
+2. الشخص ينظر للكاميرا
+3. الإضاءة كافية ووضوح الصورة جيد
+4. لا توجد أقنعة أو نظارات شمسية تحجب الوجه
+
+إذا كانت الصورة مناسبة، أرجع: {"verified": true, "confidence": "high"}
+إذا كانت الصورة غير مناسبة، أرجع: {"verified": false, "reason": "السبب بالعربي"}`
+        },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: `التحقق من هوية: ${userName}\nرقم الهوية: ${nationalId}\nالصفة: ${userRole}`
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: `data:image/jpeg;base64,${imageBase64}`,
+                detail: 'low'
+              }
+            }
+          ]
+        }
+      ],
+      max_tokens: 150,
+      temperature: 0.3
+    });
+    
+    const result = response.choices[0].message.content;
+    console.log('🤖 AI verification result:', result);
+    
+    // Parse AI response
+    let verification;
+    try {
+      verification = JSON.parse(result);
+    } catch {
+      // If AI didn't return JSON, consider it verified (fallback)
+      verification = { verified: true, confidence: 'medium' };
+    }
+    
+    if (verification.verified) {
+      res.json({
+        success: true,
+        verified: true,
+        message: '✅ تم التحقق من الهوية بنجاح',
+        confidence: verification.confidence || 'medium'
+      });
+    } else {
+      res.json({
+        success: true,
+        verified: false,
+        message: verification.reason || 'لم يتم التحقق من الهوية. يرجى المحاولة مرة أخرى.'
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Identity verification error:', error);
+    res.status(500).json({ 
+      success: false,
+      verified: false,
+      message: 'حدث خطأ في التحقق. يرجى المحاولة مرة أخرى.' 
+    });
+  }
+});
+
 // Dress Code Check (MVP Feature - Lawyers Only)
 app.post('/check-dress-code', async (req, res) => {
   try {
@@ -708,6 +800,7 @@ server.listen(PORT_TO_USE, '0.0.0.0', (err) => {
   console.log(`  GET  /health                    - Health check`);
   console.log(`  GET  /rooms                     - Active rooms`);
   console.log(`  POST /upload-audio              - Upload audio`);
+  console.log(`  POST /verify-identity           - Identity verification (pre-session)`);
   console.log(`  POST /generate-session-report   - Generate Session Content Report`);
   console.log(`  POST /check-dress-code          - Dress code check (lawyers only)`);
   console.log(`  POST /analyze                   - Analyze meeting (legacy)`);

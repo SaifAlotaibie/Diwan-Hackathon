@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import WebRTCMeeting from './WebRTC'
+import IdentityVerification from './IdentityVerification'
 import './index.css'
 
 function App() {
@@ -8,6 +9,7 @@ function App() {
   const [nationalId, setNationalId] = useState('')
   const [userRole, setUserRole] = useState('participant')
   const [joined, setJoined] = useState(false)
+  const [showVerification, setShowVerification] = useState(false)
   const [error, setError] = useState('')
   const [acceptedTerms, setAcceptedTerms] = useState(false)
 
@@ -52,7 +54,20 @@ function App() {
     }
     
     setError('')
-    setJoined(true)
+    setShowVerification(true)
+  }
+
+  // Show identity verification screen
+  if (showVerification && !joined) {
+    return (
+      <IdentityVerification
+        userName={displayName}
+        nationalId={nationalId}
+        userRole={userRole}
+        onVerified={() => setJoined(true)}
+        onCancel={() => setShowVerification(false)}
+      />
+    )
   }
 
   if (joined) {
