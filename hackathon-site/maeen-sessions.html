@@ -4,103 +4,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>خدمة الجلسات القضائية الإلكترونية - منصة معين</title>
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        .sessions-container {
-            display: flex;
-            flex-direction: column;
-            min-height: calc(100vh - 120px);
-        }
-        .sessions-header {
-            background: var(--primary-color, #1a472a);
-            color: white;
-            padding: 2rem 0;
-        }
-        .sessions-header h1 {
-            margin: 0;
-            font-size: 1.75rem;
-        }
-        .sessions-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #f5f5f5;
-        }
-        .iframe-container {
-            flex: 1;
-            position: relative;
-            min-height: 600px;
-        }
-        .iframe-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: white;
-        }
-        @media (max-width: 768px) {
-            .iframe-container {
-                min-height: 500px;
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { primary: '#216147', accent: '#C1E328', white: '#FFFFFF' },
+                    fontFamily: { arabic: ['Tajawal', 'sans-serif'] }
+                }
             }
-        }
+        };
+    </script>
+    <style>
+        :root { --primary: #216147; --accent: #C1E328; --white: #FFFFFF; }
+        body { font-family: 'Tajawal', sans-serif; }
     </style>
 </head>
-<body>
-    <header class="header">
-        <div class="top-bar">
-            <div class="container">
-                <p>موقع حكومي رسمي تابع لحكومة المملكة العربية السعودية</p>
-            </div>
+<body class="bg-white text-primary antialiased">
+    <div class="fixed top-0 right-0 left-0 h-1 bg-primary/20 z-50">
+        <div id="progressBar" class="h-full bg-accent transition-all duration-300" style="width: 0%"></div>
+    </div>
+
+    <header class="bg-primary text-white px-6 py-4 shadow-md">
+        <div class="max-w-6xl mx-auto flex items-center justify-center flex-wrap gap-3">
+            <p class="text-accent font-bold text-base">منصة معين الرقمية — الجلسات الإلكترونية</p>
         </div>
-        
-        <nav class="navbar">
-            <div class="container">
-                <div class="nav-content">
-                    <div class="logo">
-                        <img src="assets/logo.svg" alt="شعار ديوان المظالم" class="logo-img">
-                    </div>
-                    
-                    <ul class="nav-menu">
-                        <li><a href="index.html">عن الديوان</a></li>
-                        <li><a href="services.html">الخدمات الإلكترونية</a></li>
-                        <li><a href="#">الأنظمة والسياسات</a></li>
-                        <li><a href="#">المركز الإعلامي</a></li>
-                        <li><a href="#">مجلس القضاء الإداري</a></li>
-                        <li><a href="#">المشاركة الإلكترونية</a></li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
     </header>
 
-    <main class="sessions-container">
-        <div class="sessions-header">
-            <div class="container">
-                <h1>🎥 خدمة الجلسات القضائية الإلكترونية</h1>
-                <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">حضور الجلسات القضائية عن بُعد بتقنية الفيديو والصوت</p>
+    <main class="min-h-[calc(100vh-140px)] flex flex-col">
+        <section class="bg-primary px-6 py-8 md:py-10">
+            <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center gap-6 text-right">
+                <div class="w-14 h-14 rounded-full bg-accent text-primary flex items-center justify-center flex-shrink-0 text-2xl font-bold shadow-lg">⚖</div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold text-white mb-1">خدمة الجلسات القضائية الإلكترونية</h1>
+                    <p class="text-white/90 text-sm md:text-base">حضور الجلسات القضائية عن بُعد بتقنية الفيديو والصوت</p>
+                </div>
             </div>
-        </div>
-        
-        <div class="sessions-content">
-            <div class="iframe-container">
-                <iframe 
-                    src="http://localhost:5173" 
-                    title="الجلسات القضائية الإلكترونية"
-                    allow="camera; microphone; fullscreen"
-                    allowfullscreen>
-                </iframe>
+        </section>
+
+        <section class="flex-1 px-6 py-8 bg-primary/5">
+            <div class="max-w-6xl mx-auto">
+                <div class="rounded-2xl border-2 border-primary/10 bg-white shadow-xl overflow-hidden min-h-[600px]">
+                    <iframe
+                        src="http://localhost:5173"
+                        title="الجلسات القضائية الإلكترونية"
+                        allow="camera; microphone; fullscreen"
+                        allowfullscreen
+                        class="w-full h-full min-h-[600px] border-0 block">
+                    </iframe>
+                </div>
             </div>
-        </div>
+        </section>
     </main>
 
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-bottom">
-                <p>© 2026 ديوان المظالم - جميع الحقوق محفوظة</p>
-            </div>
-        </div>
+    <footer class="py-10 px-6 bg-primary text-white text-center mt-auto">
+        <p class="text-accent font-bold text-lg">منصة معين الرقمية</p>
+        <p class="text-white/80 mt-1">الجلسات القضائية الإلكترونية — مشروع الهاكاثون</p>
+        <p class="text-accent text-sm mt-2">© 2026 ديوان المظالم — جميع الحقوق محفوظة</p>
     </footer>
+
+    <script>
+        (function() {
+            var progressBar = document.getElementById('progressBar');
+            if (progressBar) {
+                window.addEventListener('scroll', function() {
+                    var h = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                    var p = h > 0 ? (window.scrollY / h) * 100 : 0;
+                    progressBar.style.width = p + '%';
+                });
+            }
+        })();
+    </script>
 </body>
 </html>

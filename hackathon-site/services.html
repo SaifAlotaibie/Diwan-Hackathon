@@ -3,113 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="الخدمات الإلكترونية لديوان المظالم — منصة معين الرقمية والخدمات القضائية">
     <title>الخدمات الإلكترونية - ديوان المظالم</title>
-    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { primary: '#216147', accent: '#C1E328', white: '#FFFFFF' },
+                    fontFamily: { arabic: ['Tajawal', 'sans-serif'] }
+                }
+            }
+        };
+    </script>
+    <style>
+        :root { --primary: #216147; --accent: #C1E328; --white: #FFFFFF; }
+        body { font-family: 'Tajawal', sans-serif; }
+    </style>
 </head>
-<body>
-    <header class="header">
-        <div class="top-bar">
-            <div class="container">
-                <p>موقع حكومي رسمي تابع لحكومة المملكة العربية السعودية</p>
+<body class="bg-white text-primary antialiased">
+    <div class="fixed top-0 right-0 left-0 h-1 bg-primary/20 z-50">
+        <div id="progressBar" class="h-full bg-accent transition-all duration-300" style="width: 0%"></div>
+    </div>
+
+    <header class="bg-primary text-white shadow-md">
+        <div class="max-w-6xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+                <nav class="flex items-center gap-6">
+                    <a href="index.html" class="text-white/90 hover:text-white text-sm font-medium transition">عن الديوان</a>
+                    <span class="text-accent font-bold text-sm">الخدمات الإلكترونية</span>
+                </nav>
             </div>
         </div>
-        
-        <nav class="navbar">
-            <div class="container">
-                <div class="nav-content">
-                    <div class="logo">
-                        <img src="assets/logo.svg" alt="شعار ديوان المظالم" class="logo-img">
-                    </div>
-                    
-                    <ul class="nav-menu">
-                        <li><a href="index.html">عن الديوان</a></li>
-                        <li><a href="services.html" class="active">الخدمات الإلكترونية</a></li>
-                        <li><a href="#">الأنظمة والسياسات</a></li>
-                        <li><a href="#">المركز الإعلامي</a></li>
-                        <li><a href="#">مجلس القضاء الإداري</a></li>
-                        <li><a href="#">المشاركة الإلكترونية</a></li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
     </header>
 
     <main>
-        <section style="padding: 4rem 0; background: var(--gray-50);">
-            <div class="container">
-                <h1 class="section-title" style="margin-bottom: 3rem;">الخدمات الإلكترونية</h1>
-                
-                <div class="services-grid">
-                    <div class="service-card">
-                        <div class="service-icon">🖥️</div>
-                        <h3>منصة معين الرقمية</h3>
-                        <p>منصة رقمية تقدم خدمات قضائية وفق نظام المرافعات أمام ديوان المظالم ولائحته التنفيذية، بداية من تقديم الدعوى والطلبات القضائية ومتابعتها، وحضور جلساتها، وحتى استلام نسخة الحكم.</p>
-                        <a href="maeen-sessions.html" class="service-link">الدخول للخدمة →</a>
-                    </div>
-                    
-                    <div class="service-card">
-                        <div class="service-icon">⚖️</div>
-                        <h3>منصة التنفيذ الإدارية</h3>
-                        <p>تُتيح الاستفادة من الخ​دمات القضائية في محكمة التنفيذ الإدارية وفق نظام التنفيذ أمام ديوان المظالم.</p>
-                        <a href="#" class="service-link">الدخول للخدمة →</a>
-                    </div>
-                    
-                    <div class="service-card">
-                        <div class="service-icon">🤝</div>
-                        <h3>تقديم طلب لقاء معالي الرئيس</h3>
-                        <p>خدمة تمكن المستفيد من تقديم طلب لقاء معالي رئيس ديوان المظالم، وهي خدمة إلكترونية تقدم دون الحاجة لمراجعة مقر الجهة.</p>
-                        <a href="#" class="service-link">الدخول للخدمة →</a>
-                    </div>
-                    
-                    <div class="service-card">
-                        <div class="service-icon">✉️</div>
-                        <h3>راسل رئيس الديوان</h3>
-                        <p>تمكنك الخدمة من التواصل مع رئيس ديوان المظالم</p>
-                        <a href="#" class="service-link">الدخول للخدمة →</a>
-                    </div>
-                </div>
+        <!-- تعريف: بوابة ديوان المظالم -->
+        <section class="py-12 px-6 bg-primary">
+            <div class="max-w-6xl mx-auto text-center">
+                <h1 class="text-2xl md:text-3xl font-bold text-white mb-4">بوابة ديوان المظالم</h1>
+                <p class="text-white/90 text-base md:text-lg max-w-3xl mx-auto leading-relaxed">هيئة قضاء إداري مستقلة يرتبط مباشرة بالملك، يسعى لإرساء العدل والإنصاف والرقابة القضائية الفاعلة على أعمال الإدارة من خلال الدعاوى الماثلة أمامه.</p>
             </div>
         </section>
 
-        <!-- President Section -->
-        <section style="padding: 4rem 0; background: var(--primary-color);">
-            <div class="container">
-                <div style="background: var(--white); padding: 3rem; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
-                    <div style="display: grid; grid-template-columns: 280px 1fr; gap: 3rem; align-items: start;">
-                        <div style="text-align: center;">
-                            <img src="assets/PresidentPic.webp" alt="معالي الرئيس" style="width: 100%; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); margin-bottom: 1.5rem;">
-                            <h3 style="color: var(--secondary-color); font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem;">معالي الرئيس</h3>
-                            <h4 style="color: var(--secondary-color); font-size: 1.05rem; font-weight: 600; margin-bottom: 0.3rem;">الدكتور خالد بن محمد اليوسف</h4>
-                            <p style="color: var(--secondary-color); font-size: 0.95rem; font-weight: 500;">رئيس ديوان المظالم</p>
+        <!-- كلمة معالي الرئيس -->
+        <section class="py-16 px-6 bg-primary">
+            <div class="max-w-6xl mx-auto">
+                <div class="rounded-2xl bg-white border border-white/20 shadow-xl overflow-hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-8 p-8 md:p-10">
+                        <div class="text-center">
+                            <img src="assets/PresidentPic.webp" alt="معالي الرئيس" class="w-full rounded-xl shadow-lg mb-4 object-cover">
+                            <h3 class="text-accent font-bold text-lg mb-1">معالي الرئيس</h3>
+                            <h4 class="text-primary font-semibold text-base mb-0.5">الدكتور خالد بن محمد اليوسف</h4>
+                            <p class="text-primary/80 text-sm font-medium">رئيس ديوان المظالم</p>
                         </div>
-                        
                         <div>
-                            <h2 style="color: var(--secondary-color); font-size: 1.9rem; font-weight: 700; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 3px solid var(--secondary-color);">كلمة معالي الرئيس</h2>
-                            
-                            <div style="color: var(--gray-700); line-height: 2; font-size: 1.05rem;">
-                                <p style="margin-bottom: 1.5rem;">تعيش بلادُنا الغالية، في ظلّ قيادة خادم الحرمين الشريفين وسمو ولي العهد الأمين، نقلةً نوعية في القطاعين العام والإداري، لم يُشهد لها مثيل، من حيث التحول الرقمي والحوكمــة، بهدف تقنين الأعمـــال وتيســير إنجازها لخدمــة المواطنيــن والمقيمين، وتحسين جودة الحياة في مختلف مدن المملكة ومرافقها وقطاعاتها العامة.</p>
-                                
-                                <p style="margin-bottom: 1.5rem;">وكان ديوان المظالم في طليعة تلك الجهات التي واكبت هذا التحول، فاستوعب متطلباته، وأتقن أدواته، إيمانًا بدوره المحوري كجهة قضائية مستقلة ترتبط أعمالها بمختلف مؤسسات الدولة.</p>
-                                
-                                <p style="margin-bottom: 1.5rem;">وبدعم كريم من قيادتنا الرشيدة، وبتوجيهاتها الملهمة، نجح ديوان المظالم -في فترة وجيزة- في تحويل جميع خدماته القضائية والإدارية إلى خدمات رقمية، والتكامل مـع منظومـة الحوكمــة الوطنيـة، بمـا يحقق الكفـاءة ويُسرّع الإنجاز، حـتى تضاعفت مخرجاته، وتقلّصـــت مــدد إجراءاته، ولا يــزال ماضيًا في مسيرته بثبــات.</p>
-                                
-                                <p style="margin-bottom: 1.5rem;">ويؤمن الديوان أن تجربة المستفيد هي المعيار الحقيقي لنجاح ما تحقق من تحوّلات رقمية، لذلك يرحّب دومًا بالملاحظات والمقترحات التي تعينه على تطوير خدماته والارتقاء بها.</p>
-                                
-                                <p style="margin-bottom: 0;">وتقبلوا تحياتي وتقديري، إلى أن نلتقي بكم مجددًا على دروب الطموح، نحو مستقبل أكثر جودة وازدهارًا في وطننا العظيم.</p>
+                            <h2 class="text-primary font-bold text-xl md:text-2xl mb-6 pb-3 border-b-2 border-accent">كلمة معالي الرئيس</h2>
+                            <div class="text-primary/80 leading-relaxed text-sm md:text-base space-y-4">
+                                <p>تعيش بلادُنا الغالية، في ظلّ قيادة خادم الحرمين الشريفين وسمو ولي العهد الأمين، نقلةً نوعية في القطاعين العام والإداري، لم يُشهد لها مثيل، من حيث التحول الرقمي والحوكمة، بهدف تقنين الأعمال وتيسير إنجازها لخدمة المواطنين والمقيمين، وتحسين جودة الحياة في مختلف مدن المملكة ومرافقها وقطاعاتها العامة.</p>
+                                <p>وكان ديوان المظالم في طليعة تلك الجهات التي واكبت هذا التحول، فاستوعب متطلباته، وأتقن أدواته، إيمانًا بدوره المحوري كجهة قضائية مستقلة ترتبط أعمالها بمختلف مؤسسات الدولة.</p>
+                                <p>وبدعم كريم من قيادتنا الرشيدة، وبتوجيهاتها الملهمة، نجح ديوان المظالم -في فترة وجيزة- في تحويل جميع خدماته القضائية والإدارية إلى خدمات رقمية، والتكامل مع منظومة الحوكمة الوطنية، بما يحقق الكفاءة ويُسرّع الإنجاز، حتى تضاعفت مخرجاته، وتقلّصت مدد إجراءاته، ولا يزال ماضيًا في مسيرته بثبات.</p>
+                                <p>ويؤمن الديوان أن تجربة المستفيد هي المعيار الحقيقي لنجاح ما تحقق من تحوّلات رقمية، لذلك يرحّب دومًا بالملاحظات والمقترحات التي تعينه على تطوير خدماته والارتقاء بها.</p>
+                                <p class="mb-0">وتقبلوا تحياتي وتقديري، إلى أن نلتقي بكم مجددًا على دروب الطموح، نحو مستقبل أكثر جودة وازدهارًا في وطننا العظيم.</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
+
+        <!-- الخدمات الإلكترونية -->
+        <section class="py-16 px-6 bg-white">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-2xl md:text-3xl font-bold text-primary mb-2 text-center">الخدمات الإلكترونية</h2>
+                <p class="text-primary/70 text-center mb-12 max-w-2xl mx-auto">اختر الخدمة المناسبة للدخول إلى منصات ديوان المظالم الإلكترونية.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <a href="../moen.html" class="service-card block border border-primary/10 rounded-xl p-6 hover:shadow-lg hover:-translate-y-1 transition bg-primary/5 text-right">
+                        <div class="w-12 h-12 rounded-full bg-accent text-primary flex items-center justify-center mb-4 text-xl font-bold">⚖</div>
+                        <h3 class="font-bold text-lg mb-2 text-primary">منصة معين الرقمية</h3>
+                        <p class="text-primary/70 text-sm mb-4 leading-relaxed">منصة رقمية تقدم خدمات قضائية وفق نظام المرافعات أمام ديوان المظالم ولائحته التنفيذية، بداية من تقديم الدعوى والطلبات القضائية ومتابعتها، وحضور جلساتها، وحتى استلام نسخة الحكم.</p>
+                        <span class="inline-flex items-center gap-2 text-primary font-semibold text-sm">الدخول للخدمة <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h5m0 0v5m0-5L10 15"/></svg></span>
+                    </a>
+
+                    <div class="block border border-primary/10 rounded-xl p-6 bg-primary/5 text-right opacity-90">
+                        <div class="w-12 h-12 rounded-full bg-accent text-primary flex items-center justify-center mb-4 text-xl font-bold">⚖</div>
+                        <h3 class="font-bold text-lg mb-2 text-primary">منصة التنفيذ الإدارية</h3>
+                        <p class="text-primary/70 text-sm mb-4 leading-relaxed">تُتيح الاستفادة من الخدمات القضائية في محكمة التنفيذ الإدارية وفق نظام التنفيذ أمام ديوان المظالم.</p>
+                        <span class="inline-flex items-center gap-2 text-primary/60 font-semibold text-sm">قريباً</span>
+                    </div>
+
+                    <div class="block border border-primary/10 rounded-xl p-6 bg-primary/5 text-right opacity-90">
+                        <div class="w-12 h-12 rounded-full bg-accent text-primary flex items-center justify-center mb-4 text-xl font-bold">⚖</div>
+                        <h3 class="font-bold text-lg mb-2 text-primary">تقديم طلب لقاء معالي الرئيس</h3>
+                        <p class="text-primary/70 text-sm mb-4 leading-relaxed">خدمة تمكن المستفيد من تقديم طلب لقاء معالي رئيس ديوان المظالم، وهي خدمة إلكترونية تقدم دون الحاجة لمراجعة مقر الجهة.</p>
+                        <span class="inline-flex items-center gap-2 text-primary/60 font-semibold text-sm">قريباً</span>
+                    </div>
+
+                    <div class="block border border-primary/10 rounded-xl p-6 bg-primary/5 text-right opacity-90">
+                        <div class="w-12 h-12 rounded-full bg-accent text-primary flex items-center justify-center mb-4 text-xl font-bold">⚖</div>
+                        <h3 class="font-bold text-lg mb-2 text-primary">راسل رئيس الديوان</h3>
+                        <p class="text-primary/70 text-sm mb-4 leading-relaxed">تمكنك الخدمة من التواصل مع رئيس ديوان المظالم.</p>
+                        <span class="inline-flex items-center gap-2 text-primary/60 font-semibold text-sm">قريباً</span>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-bottom">
-                <p>© 2026 ديوان المظالم - جميع الحقوق محفوظة</p>
-            </div>
-        </div>
+    <footer class="py-10 px-6 bg-primary text-white text-center mt-auto">
+        <p class="text-accent font-bold text-lg">منصة معين الرقمية</p>
+        <p class="text-white/80 mt-1">الخدمات الإلكترونية — مشروع الهاكاثون</p>
+        <p class="text-accent text-sm mt-2">© 2026 ديوان المظالم — جميع الحقوق محفوظة</p>
     </footer>
+
+    <script>
+        (function() {
+            var progressBar = document.getElementById('progressBar');
+            if (progressBar) {
+                window.addEventListener('scroll', function() {
+                    var h = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                    var p = h > 0 ? (window.scrollY / h) * 100 : 0;
+                    progressBar.style.width = p + '%';
+                });
+            }
+        })();
+    </script>
 </body>
 </html>

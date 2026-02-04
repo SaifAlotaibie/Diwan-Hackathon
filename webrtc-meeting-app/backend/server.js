@@ -576,24 +576,24 @@ app.post('/check-dress-code', async (req, res) => {
 app.post('/analyze-session-environment', async (req, res) => {
   try {
     const { frames, participants } = req.body;
-    
+
     if (!frames || frames.length === 0) {
       return res.json({ alerts: [] });
     }
-    
+
     console.log('🔍 Analyzing session environment for', frames.length, 'participants');
-    
+
     // Check if OpenAI is available
     if (!process.env.OPENAI_API_KEY) {
       console.warn('⚠️ OPENAI_API_KEY not set, skipping AI analysis');
       return res.json({ alerts: [] });
     }
-    
+
     const OpenAI = require('openai');
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    
+
     const alerts = [];
-    
+
     // Analyze each participant's frame
     for (const frame of frames) {
       try {
@@ -603,7 +603,7 @@ app.post('/analyze-session-environment', async (req, res) => {
             {
               role: "system",
               content: `أنت نظام مراقبة امتثال للجلسات القضائية. مهمتك تحليل الصورة والكشف عن أي مخالفات لقواعد الجلسة القضائية:
-              
+
 1. **البيئة**: هل المشارك في بيئة مناسبة؟ (ليس في سيارة، شارع، مكان عام صاخب)
 2. **الانتباه**: هل المشارك منتبه أم مشتت؟ (استخدام هاتف، أكل، شرب، النظر بعيداً)
 3. **الزي الرسمي**: 
@@ -638,9 +638,9 @@ app.post('/analyze-session-environment', async (req, res) => {
           max_tokens: 500,
           response_format: { type: "json_object" }
         });
-        
+
         const analysis = JSON.parse(response.choices[0].message.content);
-        
+
         if (!analysis.compliant && analysis.violations.length > 0) {
           alerts.push({
             participantId: frame.participantId,
@@ -652,19 +652,19 @@ app.post('/analyze-session-environment', async (req, res) => {
             message: analysis.arabic_message
           });
         }
-        
+
       } catch (err) {
         console.error(`❌ Failed to analyze frame for ${frame.participantId}:`, err.message);
       }
     }
-    
+
     console.log(`✅ Analysis complete. Found ${alerts.length} alerts`);
-    
+
     res.json({ alerts });
-    
+
   } catch (error) {
     console.error('❌ Environment analysis error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       error: error.message,
       alerts: []
