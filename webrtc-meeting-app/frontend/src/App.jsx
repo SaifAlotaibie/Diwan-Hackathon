@@ -34,35 +34,36 @@ function App() {
   }
 
   return (
-    <div className="app" style={{ background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)', minHeight: '100vh' }}>
+    <div className="app" style={{ background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <div className="header" style={{
         background: 'linear-gradient(135deg, #216147 0%, #2d7a5c 100%)',
-        padding: '30px 20px',
+        padding: '18px 20px',
         borderRadius: '0',
         marginBottom: '0',
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        borderBottom: '4px solid #C1E328'
+        borderBottom: '3px solid #C1E328'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', marginBottom: '12px' }}>
-          <img src="/bog-logo.svg" alt="شعار ديوان المظالم" style={{ height: '55px', filter: 'brightness(0) invert(1)' }} />
-          <h1 style={{ margin: 0, fontSize: '1.9rem', fontWeight: '700' }}>الجلسات القضائية الإلكترونية</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '8px' }}>
+          <img src="/bog-logo.svg" alt="شعار ديوان المظالم" style={{ height: '42px', filter: 'brightness(0) invert(1)' }} />
+          <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '700' }}>الجلسات القضائية الإلكترونية</h1>
         </div>
-        <p style={{ margin: 0, opacity: 0.95, fontSize: '1rem', textAlign: 'center' }}>منصة معين الرقمية — ديوان المظالم</p>
+        <p style={{ margin: 0, opacity: 0.95, fontSize: '0.85rem', textAlign: 'center' }}>منصة معين الرقمية — ديوان المظالم</p>
       </div>
-      <div className="lobby" style={{ maxWidth: '550px', margin: '0 auto', padding: '20px 20px' }}>
+      <div className="lobby" style={{ maxWidth: '520px', margin: '0 auto', padding: '15px 20px', flex: 1, display: 'flex', alignItems: 'center' }}>
         <div style={{
           background: 'white',
           borderRadius: '12px',
-          padding: '28px',
+          padding: '22px',
           boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
-          border: '2px solid rgba(193, 227, 40, 0.2)'
+          border: '2px solid rgba(193, 227, 40, 0.2)',
+          width: '100%'
         }}>
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: '700', marginBottom: '8px', color: '#216147' }}>الانضمام إلى الجلسة</h2>
-          <p style={{ color: '#6c757d', fontSize: '0.9rem', margin: 0 }}>أدخل بيانات الجلسة للانضمام</p>
+        <div style={{ textAlign: 'center', marginBottom: '18px' }}>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: '6px', color: '#216147' }}>الانضمام إلى الجلسة</h2>
+          <p style={{ color: '#6c757d', fontSize: '0.85rem', margin: 0 }}>أدخل بيانات الجلسة للانضمام</p>
         </div>
-        <div style={{ marginBottom: '18px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#216147', fontSize: '0.9rem' }}>
+        <div style={{ marginBottom: '14px' }}>
+          <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#216147', fontSize: '0.85rem' }}>
             رقم الجلسة
           </label>
           <input
@@ -74,20 +75,20 @@ function App() {
             onKeyPress={e => e.key === 'Enter' && handleJoin()}
             style={{
               textAlign: 'center',
-              letterSpacing: '0.4em',
-              fontSize: '1.3rem',
+              letterSpacing: '0.35em',
+              fontSize: '1.15rem',
               fontWeight: '700',
-              padding: '14px',
+              padding: '11px',
               border: '2px solid #e0e0e0',
-              borderRadius: '10px',
+              borderRadius: '8px',
               width: '100%',
               transition: 'all 0.3s',
               background: '#f8f9fa'
             }}
           />
         </div>
-        <div style={{ marginBottom: '18px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#216147', fontSize: '0.9rem' }}>
+        <div style={{ marginBottom: '14px' }}>
+          <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#216147', fontSize: '0.85rem' }}>
             الاسم الكامل
           </label>
           <input
@@ -98,8 +99,8 @@ function App() {
             onKeyPress={e => e.key === 'Enter' && handleJoin()}
             dir="rtl"
             style={{
-              padding: '12px',
-              fontSize: '15px',
+              padding: '10px',
+              fontSize: '14px',
               border: '2px solid #e0e0e0',
               borderRadius: '8px',
               width: '100%',
@@ -134,22 +135,22 @@ function App() {
             <option value="participant">مشارك</option>
           </select>
         </div>
-        {error && <div className="error" style={{ marginTop: '0', marginBottom: '16px' }}>{error}</div>}
+        {error && <div className="error" style={{ marginTop: '0', marginBottom: '12px', padding: '12px', fontSize: '13px' }}>{error}</div>}
         <button onClick={handleJoin} style={{
-          fontSize: '1rem',
+          fontSize: '0.95rem',
           fontWeight: '700',
           background: 'linear-gradient(135deg, #216147 0%, #2d7a5c 100%)',
-          padding: '14px 28px',
-          borderRadius: '10px',
+          padding: '12px 24px',
+          borderRadius: '8px',
           border: '2px solid #C1E328',
           boxShadow: '0 4px 12px rgba(33, 97, 71, 0.3)',
           transition: 'all 0.3s'
         }}>
           الانضمام إلى الجلسة
         </button>
-        <div style={{ marginTop: '20px', padding: '14px', background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)', borderRadius: '10px', border: '2px solid #90caf9' }}>
-          <p style={{ margin: 0, fontSize: '13px', color: '#0d47a1', textAlign: 'center', lineHeight: '1.6', fontWeight: '500' }}>
-            <strong style={{ fontSize: '14px' }}>تنبيه:</strong> سيطلب المتصفح الإذن باستخدام الكاميرا والمايكروفون عند الانضمام للجلسة
+        <div style={{ marginTop: '14px', padding: '10px', background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)', borderRadius: '8px', border: '2px solid #90caf9' }}>
+          <p style={{ margin: 0, fontSize: '12px', color: '#0d47a1', textAlign: 'center', lineHeight: '1.5', fontWeight: '500' }}>
+            <strong style={{ fontSize: '12.5px' }}>تنبيه:</strong> سيطلب المتصفح الإذن باستخدام الكاميرا والمايكروفون عند الانضمام للجلسة
           </p>
         </div>
         </div>
