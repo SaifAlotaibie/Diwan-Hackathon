@@ -208,38 +208,129 @@ function App() {
             <option value="participant">مشارك</option>
           </select>
         </div>
-        {/* Judicial Session Terms */}
-        <div style={{ marginBottom: '14px', padding: '12px', background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)', borderRadius: '8px', border: '2px solid rgba(33, 97, 71, 0.15)' }}>
-          <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '28px', height: '28px', background: '#216147', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <span style={{ color: 'white', fontSize: '16px', fontWeight: 'bold' }}>⚖</span>
+        {/* Judicial Session Terms - Card Grid */}
+        <div style={{ marginBottom: '14px' }}>
+          <h4 style={{ margin: '0 0 10px 0', color: '#216147', fontSize: '0.9rem', fontWeight: '700', textAlign: 'center' }}>
+            شروط الجلسات القضائية
+          </h4>
+          
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: '1fr 1fr', 
+            gap: '8px',
+            marginBottom: '12px'
+          }}>
+            {/* Card 1: Camera */}
+            <div className="term-card" style={{
+              background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+              border: '2px solid #e0e0e0',
+              borderRadius: '8px',
+              padding: '10px',
+              textAlign: 'center',
+              transition: 'all 0.3s',
+              cursor: 'default'
+            }}>
+              <div style={{ fontSize: '20px', marginBottom: '4px' }}>📹</div>
+              <div style={{ fontSize: '10px', fontWeight: '700', color: '#216147', marginBottom: '2px' }}>الكاميرا</div>
+              <div style={{ fontSize: '9px', color: '#6c757d', lineHeight: '1.3' }}>مفتوحة طوال الجلسة</div>
             </div>
-            <h4 style={{ margin: 0, color: '#216147', fontSize: '0.9rem', fontWeight: '700' }}>شروط الجلسات القضائية</h4>
+
+            {/* Card 2: Identity */}
+            <div className="term-card" style={{
+              background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+              border: '2px solid #e0e0e0',
+              borderRadius: '8px',
+              padding: '10px',
+              textAlign: 'center',
+              transition: 'all 0.3s',
+              cursor: 'default'
+            }}>
+              <div style={{ fontSize: '20px', marginBottom: '4px' }}>🆔</div>
+              <div style={{ fontSize: '10px', fontWeight: '700', color: '#216147', marginBottom: '2px' }}>الهوية</div>
+              <div style={{ fontSize: '9px', color: '#6c757d', lineHeight: '1.3' }}>الاسم الكامل الحقيقي</div>
+            </div>
+
+            {/* Card 3: Environment */}
+            <div className="term-card" style={{
+              background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+              border: '2px solid #e0e0e0',
+              borderRadius: '8px',
+              padding: '10px',
+              textAlign: 'center',
+              transition: 'all 0.3s',
+              cursor: 'default'
+            }}>
+              <div style={{ fontSize: '20px', marginBottom: '4px' }}>🏢</div>
+              <div style={{ fontSize: '10px', fontWeight: '700', color: '#216147', marginBottom: '2px' }}>البيئة</div>
+              <div style={{ fontSize: '9px', color: '#6c757d', lineHeight: '1.3' }}>رسمية ومناسبة</div>
+            </div>
+
+            {/* Card 4: Dress Code */}
+            <div className="term-card" style={{
+              background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+              border: '2px solid #e0e0e0',
+              borderRadius: '8px',
+              padding: '10px',
+              textAlign: 'center',
+              transition: 'all 0.3s',
+              cursor: 'default'
+            }}>
+              <div style={{ fontSize: '20px', marginBottom: '4px' }}>👔</div>
+              <div style={{ fontSize: '10px', fontWeight: '700', color: '#216147', marginBottom: '2px' }}>اللباس</div>
+              <div style={{ fontSize: '9px', color: '#6c757d', lineHeight: '1.3' }}>الزي الرسمي المناسب</div>
+            </div>
+
+            {/* Card 5: Authority */}
+            <div className="term-card" style={{
+              background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+              border: '2px solid #e0e0e0',
+              borderRadius: '8px',
+              padding: '10px',
+              textAlign: 'center',
+              transition: 'all 0.3s',
+              cursor: 'default'
+            }}>
+              <div style={{ fontSize: '20px', marginBottom: '4px' }}>⚖️</div>
+              <div style={{ fontSize: '10px', fontWeight: '700', color: '#216147', marginBottom: '2px' }}>الصلاحيات</div>
+              <div style={{ fontSize: '9px', color: '#6c757d', lineHeight: '1.3' }}>حسب دور المشارك</div>
+            </div>
+
+            {/* Card 6: Recording */}
+            <div className="term-card" style={{
+              background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+              border: '2px solid #e0e0e0',
+              borderRadius: '8px',
+              padding: '10px',
+              textAlign: 'center',
+              transition: 'all 0.3s',
+              cursor: 'default'
+            }}>
+              <div style={{ fontSize: '20px', marginBottom: '4px' }}>⏺️</div>
+              <div style={{ fontSize: '10px', fontWeight: '700', color: '#216147', marginBottom: '2px' }}>التسجيل</div>
+              <div style={{ fontSize: '9px', color: '#6c757d', lineHeight: '1.3' }}>نشط حتى إنهاء الجلسة</div>
+            </div>
           </div>
-          <div style={{ fontSize: '11px', color: '#495057', lineHeight: '1.6', maxHeight: '120px', overflowY: 'auto', paddingLeft: '8px' }}>
-            <p style={{ margin: '0 0 6px 0', fontWeight: '600' }}>☑ الكاميرا والمايكروفون:</p>
-            <p style={{ margin: '0 0 8px 0', paddingRight: '12px' }}>يجب إبقاء الكاميرا مفتوحة طوال الجلسة. لا يُسمح بإغلاقها.</p>
-            
-            <p style={{ margin: '0 0 6px 0', fontWeight: '600' }}>☑ الهوية والاسم:</p>
-            <p style={{ margin: '0 0 8px 0', paddingRight: '12px' }}>استخدام الاسم الكامل والهوية الوطنية الحقيقية إلزامي.</p>
-            
-            <p style={{ margin: '0 0 6px 0', fontWeight: '600' }}>☑ البيئة المناسبة:</p>
-            <p style={{ margin: '0 0 8px 0', paddingRight: '12px' }}>الحضور من بيئة رسمية مناسبة (مكتب، منزل). ممنوع أثناء القيادة.</p>
-            
-            <p style={{ margin: '0 0 6px 0', fontWeight: '600' }}>☑ اللباس الرسمي:</p>
-            <p style={{ margin: '0 0 8px 0', paddingRight: '12px' }}>القضاة والمحامون: الزي الرسمي. المشاركون: اللباس السعودي الرسمي.</p>
-            
-            <p style={{ margin: '0 0 6px 0', fontWeight: '600' }}>☑ الصلاحيات:</p>
-            <p style={{ margin: '0 0 0 0', paddingRight: '12px' }}>رئيس الجلسة له الصلاحية الكاملة لإدارة الجلسة.</p>
-          </div>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px', cursor: 'pointer', fontSize: '12px' }}>
+
+          {/* Terms Checkbox */}
+          <label style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            cursor: 'pointer', 
+            fontSize: '11px',
+            padding: '10px',
+            background: 'rgba(193, 227, 40, 0.08)',
+            borderRadius: '8px',
+            border: '2px solid rgba(193, 227, 40, 0.3)',
+            transition: 'all 0.3s'
+          }}>
             <input
               type="checkbox"
               checked={acceptedTerms}
               onChange={e => setAcceptedTerms(e.target.checked)}
-              style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+              style={{ width: '16px', height: '16px', cursor: 'pointer', flexShrink: 0 }}
             />
-            <span style={{ fontWeight: '600', color: '#216147' }}>أوافق على شروط الجلسات القضائية</span>
+            <span style={{ fontWeight: '600', color: '#216147' }}>أوافق على جميع شروط الجلسات القضائية المذكورة أعلاه</span>
           </label>
         </div>
         
