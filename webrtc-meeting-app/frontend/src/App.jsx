@@ -5,16 +5,52 @@ import './index.css'
 function App() {
   const [sessionCode, setSessionCode] = useState('')
   const [displayName, setDisplayName] = useState('')
+  const [nationalId, setNationalId] = useState('')
   const [userRole, setUserRole] = useState('participant')
   const [joined, setJoined] = useState(false)
   const [error, setError] = useState('')
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
+
+  // Validate Arabic name (at least 3 parts)
+  const validateArabicName = (name) => {
+    const arabicRegex = /^[\u0600-\u06FF\s]+$/
+    const parts = name.trim().split(/\s+/)
+    return arabicRegex.test(name) && parts.length >= 3
+  }
+
+  // Validate National ID (10 digits starting with 1 or 2)
+  const validateNationalId = (id) => {
+    const idRegex = /^[12]\d{9}$/
+    return idRegex.test(id)
+  }
 
   const handleJoin = () => {
     const code = sessionCode.replace(/\D/g, '').slice(0, 6)
+    
+    // Validate session code
     if (code.length !== 6) {
-      setError('أدخل كود الجلسة (6 أرقام)')
+      setError('⚠️ أدخل رقم الجلسة (6 أرقام)')
       return
     }
+    
+    // Validate national ID
+    if (!validateNationalId(nationalId)) {
+      setError('⚠️ رقم الهوية غير صحيح (يجب أن يبدأ بـ 1 أو 2 ويتكون من 10 أرقام)')
+      return
+    }
+    
+    // Validate Arabic full name
+    if (!validateArabicName(displayName)) {
+      setError('⚠️ يجب إدخال الاسم الثلاثي كاملاً بالعربي (مثال: محمد أحمد عبدالله)')
+      return
+    }
+    
+    // Validate terms acceptance
+    if (!acceptedTerms) {
+      setError('⚠️ يجب الموافقة على شروط الجلسات القضائية للمتابعة')
+      return
+    }
+    
     setError('')
     setJoined(true)
   }
@@ -89,11 +125,33 @@ function App() {
         </div>
         <div style={{ marginBottom: '14px' }}>
           <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#216147', fontSize: '0.85rem' }}>
-            الاسم الكامل
+            رقم الهوية الوطنية
           </label>
           <input
             type="text"
-            placeholder="أدخل اسمك الكامل"
+            placeholder="1234567890"
+            value={nationalId}
+            onChange={e => setNationalId(e.target.value.replace(/\D/g, '').slice(0, 10))}
+            maxLength={10}
+            style={{
+              padding: '10px',
+              fontSize: '14px',
+              border: '2px solid #e0e0e0',
+              borderRadius: '8px',
+              width: '100%',
+              fontWeight: '500',
+              textAlign: 'center',
+              letterSpacing: '0.1em'
+            }}
+          />
+        </div>
+        <div style={{ marginBottom: '14px' }}>
+          <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#216147', fontSize: '0.85rem' }}>
+            الاسم الثلاثي بالعربي
+          </label>
+          <input
+            type="text"
+            placeholder="محمد أحمد عبدالله"
             value={displayName}
             onChange={e => setDisplayName(e.target.value)}
             onKeyPress={e => e.key === 'Enter' && handleJoin()}
@@ -135,7 +193,42 @@ function App() {
             <option value="participant">مشارك</option>
           </select>
         </div>
-        {error && <div className="error" style={{ marginTop: '0', marginBottom: '12px', padding: '12px', fontSize: '13px' }}>{error}</div>}
+        {/* Judicial Session Terms */}
+        <div style={{ marginBottom: '14px', padding: '12px', background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)', borderRadius: '8px', border: '2px solid rgba(33, 97, 71, 0.15)' }}>
+          <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ width: '28px', height: '28px', background: '#216147', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ color: 'white', fontSize: '16px', fontWeight: 'bold' }}>⚖</span>
+            </div>
+            <h4 style={{ margin: 0, color: '#216147', fontSize: '0.9rem', fontWeight: '700' }}>شروط الجلسات القضائية</h4>
+          </div>
+          <div style={{ fontSize: '11px', color: '#495057', lineHeight: '1.6', maxHeight: '120px', overflowY: 'auto', paddingLeft: '8px' }}>
+            <p style={{ margin: '0 0 6px 0', fontWeight: '600' }}>☑ الكاميرا والمايكروفون:</p>
+            <p style={{ margin: '0 0 8px 0', paddingRight: '12px' }}>يجب إبقاء الكاميرا مفتوحة طوال الجلسة. لا يُسمح بإغلاقها.</p>
+            
+            <p style={{ margin: '0 0 6px 0', fontWeight: '600' }}>☑ الهوية والاسم:</p>
+            <p style={{ margin: '0 0 8px 0', paddingRight: '12px' }}>استخدام الاسم الكامل والهوية الوطنية الحقيقية إلزامي.</p>
+            
+            <p style={{ margin: '0 0 6px 0', fontWeight: '600' }}>☑ البيئة المناسبة:</p>
+            <p style={{ margin: '0 0 8px 0', paddingRight: '12px' }}>الحضور من بيئة رسمية مناسبة (مكتب، منزل). ممنوع أثناء القيادة.</p>
+            
+            <p style={{ margin: '0 0 6px 0', fontWeight: '600' }}>☑ اللباس الرسمي:</p>
+            <p style={{ margin: '0 0 8px 0', paddingRight: '12px' }}>القضاة والمحامون: الزي الرسمي. المشاركون: اللباس السعودي الرسمي.</p>
+            
+            <p style={{ margin: '0 0 6px 0', fontWeight: '600' }}>☑ الصلاحيات:</p>
+            <p style={{ margin: '0 0 0 0', paddingRight: '12px' }}>رئيس الجلسة له الصلاحية الكاملة لإدارة الجلسة.</p>
+          </div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px', cursor: 'pointer', fontSize: '12px' }}>
+            <input
+              type="checkbox"
+              checked={acceptedTerms}
+              onChange={e => setAcceptedTerms(e.target.checked)}
+              style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+            />
+            <span style={{ fontWeight: '600', color: '#216147' }}>أوافق على شروط الجلسات القضائية</span>
+          </label>
+        </div>
+        
+        {error && <div className="error" style={{ marginTop: '0', marginBottom: '12px', padding: '12px', fontSize: '12px' }}>{error}</div>}
         <button onClick={handleJoin} style={{
           fontSize: '0.95rem',
           fontWeight: '700',
