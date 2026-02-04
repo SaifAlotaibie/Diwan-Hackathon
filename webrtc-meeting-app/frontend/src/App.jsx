@@ -217,91 +217,91 @@ function App() {
           <div style={{ 
             display: 'grid', 
             gridTemplateColumns: '1fr 1fr', 
-            gap: '8px',
-            marginBottom: '12px'
+            gap: '10px',
+            marginBottom: '14px'
           }}>
             {/* Card 1: Camera */}
             <div className="term-card" style={{
               background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
               border: '2px solid #e0e0e0',
-              borderRadius: '8px',
-              padding: '12px',
+              borderRadius: '10px',
+              padding: '16px',
               textAlign: 'center',
               transition: 'all 0.3s',
               cursor: 'default'
             }}>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: '#216147', marginBottom: '4px' }}>الكاميرا</div>
-              <div style={{ fontSize: '11px', color: '#6c757d', lineHeight: '1.4' }}>مفتوحة طوال الجلسة</div>
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#216147', marginBottom: '6px' }}>الكاميرا</div>
+              <div style={{ fontSize: '13px', color: '#6c757d', lineHeight: '1.4' }}>مفتوحة طوال الجلسة</div>
             </div>
 
             {/* Card 2: Identity */}
             <div className="term-card" style={{
               background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
               border: '2px solid #e0e0e0',
-              borderRadius: '8px',
-              padding: '12px',
+              borderRadius: '10px',
+              padding: '16px',
               textAlign: 'center',
               transition: 'all 0.3s',
               cursor: 'default'
             }}>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: '#216147', marginBottom: '4px' }}>الهوية</div>
-              <div style={{ fontSize: '11px', color: '#6c757d', lineHeight: '1.4' }}>الاسم الكامل الحقيقي</div>
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#216147', marginBottom: '6px' }}>الهوية</div>
+              <div style={{ fontSize: '13px', color: '#6c757d', lineHeight: '1.4' }}>الاسم الكامل الحقيقي</div>
             </div>
 
             {/* Card 3: Environment */}
             <div className="term-card" style={{
               background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
               border: '2px solid #e0e0e0',
-              borderRadius: '8px',
-              padding: '12px',
+              borderRadius: '10px',
+              padding: '16px',
               textAlign: 'center',
               transition: 'all 0.3s',
               cursor: 'default'
             }}>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: '#216147', marginBottom: '4px' }}>البيئة المناسبة</div>
-              <div style={{ fontSize: '11px', color: '#6c757d', lineHeight: '1.4' }}>رسمية ومهنية</div>
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#216147', marginBottom: '6px' }}>البيئة المناسبة</div>
+              <div style={{ fontSize: '13px', color: '#6c757d', lineHeight: '1.4' }}>رسمية ومهنية</div>
             </div>
 
             {/* Card 4: Dress Code */}
             <div className="term-card" style={{
               background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
               border: '2px solid #e0e0e0',
-              borderRadius: '8px',
-              padding: '12px',
+              borderRadius: '10px',
+              padding: '16px',
               textAlign: 'center',
               transition: 'all 0.3s',
               cursor: 'default'
             }}>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: '#216147', marginBottom: '4px' }}>اللباس الرسمي</div>
-              <div style={{ fontSize: '11px', color: '#6c757d', lineHeight: '1.4' }}>الزي المناسب</div>
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#216147', marginBottom: '6px' }}>اللباس الرسمي</div>
+              <div style={{ fontSize: '13px', color: '#6c757d', lineHeight: '1.4' }}>الزي المناسب</div>
             </div>
 
             {/* Card 5: Authority */}
             <div className="term-card" style={{
               background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
               border: '2px solid #e0e0e0',
-              borderRadius: '8px',
-              padding: '12px',
+              borderRadius: '10px',
+              padding: '16px',
               textAlign: 'center',
               transition: 'all 0.3s',
               cursor: 'default'
             }}>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: '#216147', marginBottom: '4px' }}>الصلاحيات</div>
-              <div style={{ fontSize: '11px', color: '#6c757d', lineHeight: '1.4' }}>حسب الدور</div>
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#216147', marginBottom: '6px' }}>الصلاحيات</div>
+              <div style={{ fontSize: '13px', color: '#6c757d', lineHeight: '1.4' }}>حسب الدور</div>
             </div>
 
             {/* Card 6: Recording */}
             <div className="term-card" style={{
               background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
               border: '2px solid #e0e0e0',
-              borderRadius: '8px',
-              padding: '12px',
+              borderRadius: '10px',
+              padding: '16px',
               textAlign: 'center',
               transition: 'all 0.3s',
               cursor: 'default'
             }}>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: '#216147', marginBottom: '4px' }}>التسجيل</div>
-              <div style={{ fontSize: '11px', color: '#6c757d', lineHeight: '1.4' }}>نشط حتى الإنهاء</div>
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#216147', marginBottom: '6px' }}>التسجيل</div>
+              <div style={{ fontSize: '13px', color: '#6c757d', lineHeight: '1.4' }}>نشط حتى الإنهاء</div>
             </div>
           </div>
 
