@@ -131,14 +131,14 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
       
     } catch (err) {
       console.error('❌ Media error:', err)
-      let errorMessage = 'لا يمكن الوصول للكاميرا أو المايكروفون. '
+      let errorMessage = ''
       
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        errorMessage += 'يرجى السماح بالأذونات وتحديث الصفحة.'
+        errorMessage = '⚠️ لم يتم منح الإذن باستخدام الكاميرا والمايكروفون.\n\nيُرجى السماح بالأذونات في المتصفح وتحديث الصفحة للانضمام إلى الجلسة.'
       } else if (err.name === 'NotFoundError') {
-        errorMessage += 'لم يتم العثور على كاميرا أو مايكروفون.'
+        errorMessage = '⚠️ لم يتم العثور على كاميرا أو مايكروفون متصل بالجهاز.\n\nتحقق من توصيل الأجهزة وحاول مرة أخرى.'
       } else {
-        errorMessage += 'يرجى التحقق من إعدادات الجهاز.'
+        errorMessage = '⚠️ حدث خطأ في الوصول إلى الكاميرا أو المايكروفون.\n\nيُرجى التحقق من إعدادات الجهاز والمتصفح.'
       }
       
       setError(errorMessage)
@@ -1194,9 +1194,19 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
   // Main meeting screen - Many-to-Many
   return (
     <div className="app">
-      <div className="header">
-        <h1>🎥 الجلسة القضائية الإلكترونية</h1>
-        <p>الجلسة: {roomId} | المشاركون: {participants.length + 1}</p>
+      <div className="header" style={{
+        background: 'linear-gradient(135deg, #216147 0%, #2d7a5c 100%)',
+        padding: '25px',
+        borderRadius: '0',
+        marginBottom: '0',
+        boxShadow: 'none',
+        borderBottom: '3px solid #C1E328'
+      }}>
+        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', marginBottom: '10px'}}>
+          <img src="/bog-logo.svg" alt="شعار ديوان المظالم" style={{height: '55px', filter: 'brightness(0) invert(1)'}} />
+          <h1 style={{margin: 0, fontSize: '2rem', fontWeight: '700'}}>الجلسة القضائية الإلكترونية</h1>
+        </div>
+        <p style={{margin: 0, opacity: 0.95, fontSize: '1rem'}}>رقم الجلسة: {roomId} | عدد المشاركين: {participants.length + 1}</p>
       </div>
       
       <div className="meeting">
@@ -1252,8 +1262,9 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
             backgroundColor: '#000',
             borderRadius: '12px',
             overflow: 'hidden',
-            boxShadow: activeSpeaker === 'local' ? '0 0 0 4px #4CAF50' : '0 4px 6px rgba(0,0,0,0.1)',
-            transition: 'box-shadow 0.3s ease'
+            boxShadow: activeSpeaker === 'local' ? '0 0 0 5px #C1E328, 0 12px 32px rgba(0,0,0,0.25)' : '0 8px 24px rgba(0,0,0,0.15)',
+            border: activeSpeaker === 'local' ? '3px solid #C1E328' : '3px solid rgba(193, 227, 40, 0.3)',
+            transition: 'all 0.3s ease'
           }}>
             <video 
               ref={localVideoRef} 
@@ -1264,40 +1275,48 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
             />
             <div style={{
               position: 'absolute',
-              bottom: '10px',
-              left: '10px',
-              background: 'rgba(0,0,0,0.7)',
+              bottom: '12px',
+              left: '12px',
+              background: 'linear-gradient(135deg, rgba(33, 97, 71, 0.95) 0%, rgba(45, 122, 92, 0.95) 100%)',
               color: 'white',
-              padding: '5px 10px',
-              borderRadius: '6px',
-              fontSize: '14px'
+              padding: '8px 14px',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+              border: '1px solid rgba(193, 227, 40, 0.3)'
             }}>
-              👤 {userName} (أنت)
+              {userName} (أنت)
             </div>
             {activeSpeaker === 'local' && (
               <div style={{
                 position: 'absolute',
-                top: '10px',
-                right: '10px',
-                background: '#4CAF50',
-                color: 'white',
-                padding: '5px 10px',
-                borderRadius: '6px',
-                fontSize: '12px',
-                fontWeight: 'bold'
+                top: '12px',
+                right: '12px',
+                background: 'linear-gradient(135deg, #C1E328 0%, #a8c625 100%)',
+                color: '#216147',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                fontSize: '13px',
+                fontWeight: 'bold',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                animation: 'pulse 2s infinite'
               }}>
-                🎤 يتحدث الآن
+                يتحدث الآن
               </div>
             )}
             <div style={{
               position: 'absolute',
-              top: '10px',
-              left: '10px',
-              background: 'rgba(103, 126, 234, 0.9)',
+              top: '12px',
+              left: '12px',
+              background: 'linear-gradient(135deg, #216147 0%, #2d7a5c 100%)',
               color: 'white',
-              padding: '4px 8px',
-              borderRadius: '4px',
-              fontSize: '12px'
+              padding: '6px 12px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              fontWeight: '600',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+              border: '1px solid rgba(193, 227, 40, 0.5)'
             }}>
               {getRoleLabel(userRole)}
             </div>
@@ -1315,8 +1334,9 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
                 backgroundColor: '#000',
                 borderRadius: '12px',
                 overflow: 'hidden',
-                boxShadow: isActive ? '0 0 0 4px #4CAF50' : '0 4px 6px rgba(0,0,0,0.1)',
-                transition: 'box-shadow 0.3s ease',
+                boxShadow: isActive ? '0 0 0 5px #C1E328, 0 12px 32px rgba(0,0,0,0.25)' : '0 8px 24px rgba(0,0,0,0.15)',
+                border: isActive ? '3px solid #C1E328' : '3px solid rgba(193, 227, 40, 0.3)',
+                transition: 'all 0.3s ease',
                 minHeight: '300px'
               }}>
                 {stream && isStreamReady ? (
@@ -1346,40 +1366,48 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
                 )}
                 <div style={{
                   position: 'absolute',
-                  bottom: '10px',
-                  left: '10px',
-                  background: 'rgba(0,0,0,0.7)',
+                  bottom: '12px',
+                  left: '12px',
+                  background: 'linear-gradient(135deg, rgba(33, 97, 71, 0.95) 0%, rgba(45, 122, 92, 0.95) 100%)',
                   color: 'white',
-                  padding: '5px 10px',
-                  borderRadius: '6px',
-                  fontSize: '14px'
+                  padding: '8px 14px',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                  border: '1px solid rgba(193, 227, 40, 0.3)'
                 }}>
-                  👤 {participant.participantId}
+                  {participant.participantId}
                 </div>
                 {isActive && (
                   <div style={{
                     position: 'absolute',
-                    top: '10px',
-                    right: '10px',
-                    background: '#4CAF50',
-                    color: 'white',
-                    padding: '5px 10px',
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    fontWeight: 'bold'
+                    top: '12px',
+                    right: '12px',
+                    background: 'linear-gradient(135deg, #C1E328 0%, #a8c625 100%)',
+                    color: '#216147',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    fontWeight: 'bold',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                    animation: 'pulse 2s infinite'
                   }}>
-                    🎤 يتحدث الآن
+                    يتحدث الآن
                   </div>
                 )}
                 <div style={{
                   position: 'absolute',
-                  top: '10px',
-                  left: '10px',
-                  background: 'rgba(103, 126, 234, 0.9)',
+                  top: '12px',
+                  left: '12px',
+                  background: 'linear-gradient(135deg, #216147 0%, #2d7a5c 100%)',
                   color: 'white',
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  fontSize: '12px'
+                  padding: '6px 12px',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                  border: '1px solid rgba(193, 227, 40, 0.5)'
                 }}>
                   {getRoleLabel(participant.role)}
                 </div>
@@ -1389,48 +1417,128 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
         </div>
         
         {/* Controls */}
-        <div className="controls">
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '12px',
+          padding: '22px',
+          background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+          borderRadius: '16px',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+          border: '2px solid rgba(193, 227, 40, 0.25)',
+          flexWrap: 'wrap',
+          maxWidth: '900px',
+          margin: '0 auto'
+        }}>
           <button 
             className={`control-btn ${isCameraOn ? 'active' : 'inactive'}`}
             onClick={toggleCamera}
             title="شروط الجلسة: الكاميرا مطلوبة طوال الجلسة ولا يُسمح بإغلاقها"
+            style={{
+              background: isCameraOn 
+                ? 'linear-gradient(135deg, #216147 0%, #2d7a5c 100%)' 
+                : 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+              color: 'white',
+              padding: '13px 26px',
+              borderRadius: '10px',
+              fontWeight: '600',
+              fontSize: '14px',
+              border: isCameraOn ? '2px solid rgba(193, 227, 40, 0.4)' : '2px solid #991b1b',
+              boxShadow: isCameraOn 
+                ? '0 4px 14px rgba(33, 97, 71, 0.3)' 
+                : '0 4px 14px rgba(220, 38, 38, 0.3)',
+              transition: 'all 0.3s'
+            }}
           >
-            {isCameraOn ? '📹' : '📹❌'} الكاميرا (مطلوبة)
+            الكاميرا {isCameraOn ? 'مفتوحة' : 'مغلقة'} (مطلوبة)
           </button>
           
           <button 
             className={`control-btn ${isMicOn ? 'active' : 'inactive'}`}
             onClick={toggleMic}
+            style={{
+              background: isMicOn 
+                ? 'linear-gradient(135deg, #216147 0%, #2d7a5c 100%)' 
+                : 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+              color: 'white',
+              padding: '13px 26px',
+              borderRadius: '10px',
+              fontWeight: '600',
+              fontSize: '14px',
+              border: isMicOn ? '2px solid rgba(193, 227, 40, 0.4)' : '2px solid #991b1b',
+              boxShadow: isMicOn 
+                ? '0 4px 14px rgba(33, 97, 71, 0.3)' 
+                : '0 4px 14px rgba(220, 38, 38, 0.3)',
+              transition: 'all 0.3s'
+            }}
           >
-            {isMicOn ? '🎤' : '🎤❌'} المايكروفون
+            الميكروفون {isMicOn ? 'مفتوح' : 'مغلق'}
           </button>
           
           <button 
             className="control-btn end"
             onClick={endMeeting}
             title={isChair ? 'إنهاء الجلسة وتحليل المحاضر (رئيس الجلسة فقط)' : 'إنهاء الجلسة مسموح لرئيس الجلسة فقط'}
-            style={{background: '#dc3545'}}
+            style={{
+              background: 'linear-gradient(135deg, #dc3545 0%, #b91c1c 100%)',
+              color: 'white',
+              padding: '13px 26px',
+              borderRadius: '10px',
+              fontWeight: '600',
+              fontSize: '14px',
+              border: '2px solid #991b1b',
+              boxShadow: '0 4px 14px rgba(220, 53, 69, 0.35)',
+              transition: 'all 0.3s'
+            }}
           >
-            📞 {isChair ? 'إنهاء الجلسة وتحليل المحاضر' : 'إنهاء الجلسة (رئيس الجلسة فقط)'}
+            إنهاء الجلسة {!isChair && '(رئيس الجلسة فقط)'}
           </button>
         </div>
 
         {/* Participants list */}
         <div style={{
-          maxWidth: '600px',
+          maxWidth: '700px',
           margin: '20px auto',
-          padding: '15px',
-          background: '#f8f9fa',
-          borderRadius: '8px'
+          padding: '20px',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%)',
+          borderRadius: '15px',
+          boxShadow: '0 5px 20px rgba(0,0,0,0.15)',
+          border: '2px solid rgba(193, 227, 40, 0.2)'
         }}>
-          <h4 style={{margin: '0 0 10px 0', textAlign: 'center'}}>👥 المشاركون ({participants.length + 1})</h4>
-          <div style={{display: 'flex', flexDirection: 'column', gap: '5px'}}>
-            <div style={{padding: '8px', background: 'white', borderRadius: '6px'}}>
-              ✓ {userName} (أنت) - {getRoleLabel(userRole)}
+          <h4 style={{
+            margin: '0 0 15px 0',
+            textAlign: 'center',
+            color: '#216147',
+            fontSize: '18px',
+            fontWeight: '700',
+            borderBottom: '2px solid rgba(193, 227, 40, 0.3)',
+            paddingBottom: '10px'
+          }}>
+            المشاركون ({participants.length + 1})
+          </h4>
+          <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+            <div style={{
+              padding: '12px 16px',
+              background: 'linear-gradient(135deg, #216147 0%, #2d7a5c 100%)',
+              borderRadius: '10px',
+              color: 'white',
+              fontWeight: '600',
+              boxShadow: '0 2px 8px rgba(33, 97, 71, 0.3)',
+              border: '2px solid rgba(193, 227, 40, 0.4)'
+            }}>
+              {userName} (أنت) — {getRoleLabel(userRole)}
             </div>
             {participants.map(p => (
-              <div key={p.socketId} style={{padding: '8px', background: 'white', borderRadius: '6px'}}>
-                ✓ {p.participantId} - {getRoleLabel(p.role)}
+              <div key={p.socketId} style={{
+                padding: '12px 16px',
+                background: 'white',
+                borderRadius: '10px',
+                fontWeight: '500',
+                color: '#216147',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                border: '2px solid rgba(33, 97, 71, 0.15)'
+              }}>
+                {p.participantId} — {getRoleLabel(p.role)}
               </div>
             ))}
           </div>

@@ -155,9 +155,9 @@
 
 | من | إلى | العنصر | الرابط/المسار |
 |----|-----|--------|----------------|
-| `services.html` | منصة معين | بطاقة منصة معين + «الدخول للخدمة» | `../moen.html` |
-| `moen.html` | الجلسات القضائية | زر «فتح الخدمة» داخل بطاقة الجلسات | `hackathon-site/maeen-sessions.html` |
-| `maeen-sessions.html` | تطبيق الجلسات | محتوى iframe (تطوير) | `http://localhost:5173` |
+| `hackathon-site/services.html` | منصة معين | بطاقة منصة معين + «الدخول للخدمة» | `moen.html` |
+| `hackathon-site/moen.html` | الجلسات القضائية | زر «فتح الخدمة» داخل بطاقة الجلسات | `maeen-sessions.html` |
+| `hackathon-site/maeen-sessions.html` | تطبيق الجلسات | محتوى iframe (تطوير) | `http://localhost:5173` |
 
 ---
 
@@ -165,8 +165,20 @@
 
 ### تشغيل موقع الهاكاثون وصفحات معين
 
-- افتح `hackathon-site/index.html` أو `hackathon-site/services.html` من المتصفح (أو من خادم ثابت).
-- للانتقال إلى منصة معين: من صفحة الخدمات اضغط «منصة معين الرقمية» أو افتح `moen.html` مباشرة.
+**ملاحظة مهمة:** يجب تشغيل الصفحات عبر خادم HTTP (وليس `file://`) لضمان عمل iframe بشكل صحيح.
+
+```bash
+# في المجلد الرئيسي
+cd hackathon-site
+python -m http.server 8080
+```
+
+ثم افتح: `http://localhost:8080/services.html`
+
+- **رحلة المستخدم الكاملة:**
+  1. `services.html` → اضغط "الدخول للخدمة" تحت بطاقة منصة معين
+  2. `moen.html` → اضغط "فتح الخدمة" في بطاقة الجلسات القضائية الإلكترونية
+  3. `maeen-sessions.html` → أدخل بيانات الجلسة للانضمام
 
 ### تشغيل تطبيق الجلسات القضائية
 
