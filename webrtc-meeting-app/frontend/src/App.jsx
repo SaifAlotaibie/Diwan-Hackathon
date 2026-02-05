@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import WebRTCMeeting from './WebRTC'
 import IdentityVerification from './IdentityVerification'
+import JudicialTerms from './JudicialTerms'
 import './index.css'
 
 function App() {
@@ -10,6 +11,7 @@ function App() {
   const [userRole, setUserRole] = useState('participant')
   const [joined, setJoined] = useState(false)
   const [showVerification, setShowVerification] = useState(false)
+  const [showTerms, setShowTerms] = useState(true)
   const [error, setError] = useState('')
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [showTermsPage, setShowTermsPage] = useState(true) // Show terms first
