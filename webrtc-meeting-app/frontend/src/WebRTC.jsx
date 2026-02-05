@@ -1351,12 +1351,14 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
             ? '1fr' 
             : (participants.length === 0 ? '1fr' : 
                participants.length === 1 ? 'repeat(2, 1fr)' :
-               participants.length <= 3 ? 'repeat(2, 1fr)' :
+               participants.length === 2 ? 'repeat(2, 1fr)' :
+               participants.length === 3 ? 'repeat(2, 1fr)' :
                'repeat(3, 1fr)'),
-          gap: window.innerWidth <= 768 ? '10px' : '15px',
+          gap: window.innerWidth <= 768 ? '10px' : '18px',
           padding: window.innerWidth <= 768 ? '12px' : '20px',
-          maxWidth: '1400px',
-          margin: '0 auto'
+          maxWidth: participants.length <= 2 ? '1200px' : '1400px',
+          margin: '0 auto',
+          gridAutoRows: window.innerWidth <= 768 ? 'auto' : 'minmax(320px, 1fr)'
         }}>
           {/* Local video */}
           <div style={{
@@ -1366,7 +1368,10 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
             overflow: 'hidden',
             boxShadow: activeSpeaker === 'local' ? '0 0 0 5px #C1E328, 0 12px 32px rgba(0,0,0,0.25)' : '0 8px 24px rgba(0,0,0,0.15)',
             border: activeSpeaker === 'local' ? '3px solid #C1E328' : '3px solid rgba(193, 227, 40, 0.3)',
-            transition: 'all 0.3s ease'
+            transition: 'all 0.3s ease',
+            aspectRatio: '16 / 9',
+            minHeight: window.innerWidth <= 768 ? '200px' : '320px',
+            width: '100%'
           }}>
             <video 
               ref={localVideoRef} 
@@ -1439,7 +1444,9 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
                 boxShadow: isActive ? '0 0 0 5px #C1E328, 0 12px 32px rgba(0,0,0,0.25)' : '0 8px 24px rgba(0,0,0,0.15)',
                 border: isActive ? '3px solid #C1E328' : '3px solid rgba(193, 227, 40, 0.3)',
                 transition: 'all 0.3s ease',
-                minHeight: '300px'
+                aspectRatio: '16 / 9',
+                minHeight: window.innerWidth <= 768 ? '200px' : '320px',
+                width: '100%'
               }}>
                 {stream && isStreamReady ? (
                   <video 
