@@ -11,10 +11,8 @@ function App() {
   const [userRole, setUserRole] = useState('participant')
   const [joined, setJoined] = useState(false)
   const [showVerification, setShowVerification] = useState(false)
-  const [showTerms, setShowTerms] = useState(true)
+  const [showTermsPage, setShowTermsPage] = useState(true) // ALWAYS show terms first
   const [error, setError] = useState('')
-  const [acceptedTerms, setAcceptedTerms] = useState(false)
-  const [showTermsPage, setShowTermsPage] = useState(true) // Show terms first
 
   // Validate Arabic name (at least 3 parts)
   const validateArabicName = (name) => {
@@ -47,12 +45,6 @@ function App() {
     // Validate Arabic full name
     if (!validateArabicName(displayName)) {
       setError('⚠️ يجب إدخال الاسم الثلاثي كاملاً بالعربي (مثال: محمد أحمد عبدالله)')
-      return
-    }
-    
-    // Validate terms acceptance
-    if (!acceptedTerms) {
-      setError('⚠️ يجب الموافقة على شروط الجلسات القضائية للمتابعة')
       return
     }
     
