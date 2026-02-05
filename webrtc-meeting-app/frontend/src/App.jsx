@@ -321,30 +321,30 @@ function App() {
     <div className="app" style={{ background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <div className="header" style={{
         background: 'linear-gradient(135deg, #216147 0%, #2d7a5c 100%)',
-        padding: '18px 20px',
+        padding: window.innerWidth <= 768 ? '12px 15px' : '18px 20px',
         borderRadius: '0',
         marginBottom: '0',
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         borderBottom: '3px solid #C1E328'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '8px' }}>
-          <img src="/bog-logo.svg" alt="شعار ديوان المظالم" style={{ height: '42px', filter: 'brightness(0) invert(1)' }} />
-          <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '700' }}>الجلسات القضائية الإلكترونية</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: window.innerWidth <= 768 ? '8px' : '12px', marginBottom: window.innerWidth <= 768 ? '4px' : '8px', flexWrap: 'wrap' }}>
+          <img src="/bog-logo.svg" alt="شعار ديوان المظالم" style={{ height: window.innerWidth <= 768 ? '32px' : '42px', filter: 'brightness(0) invert(1)' }} />
+          <h1 style={{ margin: 0, fontSize: window.innerWidth <= 768 ? '1.1rem' : '1.5rem', fontWeight: '700', textAlign: 'center' }}>الجلسات القضائية الإلكترونية</h1>
         </div>
-        <p style={{ margin: 0, opacity: 0.95, fontSize: '0.85rem', textAlign: 'center' }}>منصة معين الرقمية — ديوان المظالم</p>
+        <p style={{ margin: 0, opacity: 0.95, fontSize: window.innerWidth <= 768 ? '0.75rem' : '0.85rem', textAlign: 'center' }}>منصة معين الرقمية — ديوان المظالم</p>
       </div>
-      <div className="lobby" style={{ maxWidth: '520px', margin: '0 auto', padding: '15px 20px', flex: 1, display: 'flex', alignItems: 'center' }}>
+      <div className="lobby" style={{ maxWidth: '520px', margin: '0 auto', padding: window.innerWidth <= 768 ? '10px 15px' : '15px 20px', flex: 1, display: 'flex', alignItems: 'center' }}>
         <div style={{
           background: 'white',
-          borderRadius: '12px',
-          padding: '22px',
+          borderRadius: window.innerWidth <= 768 ? '10px' : '12px',
+          padding: window.innerWidth <= 768 ? '16px' : '22px',
           boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
           border: '2px solid rgba(193, 227, 40, 0.2)',
           width: '100%'
         }}>
-        <div style={{ textAlign: 'center', marginBottom: '18px' }}>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: '6px', color: '#216147' }}>الانضمام إلى الجلسة</h2>
-          <p style={{ color: '#6c757d', fontSize: '0.85rem', margin: 0 }}>أدخل بيانات الجلسة للانضمام</p>
+        <div style={{ textAlign: 'center', marginBottom: window.innerWidth <= 768 ? '14px' : '18px' }}>
+          <h2 style={{ fontSize: window.innerWidth <= 768 ? '1.2rem' : '1.4rem', fontWeight: '700', marginBottom: '6px', color: '#216147' }}>الانضمام إلى الجلسة</h2>
+          <p style={{ color: '#6c757d', fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.85rem', margin: 0 }}>أدخل بيانات الجلسة للانضمام</p>
         </div>
         <div style={{ marginBottom: '14px' }}>
           <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#216147', fontSize: '0.85rem' }}>

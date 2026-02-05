@@ -247,10 +247,36 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
   }, [roomId, userName, userRole])
 
   const initializeSocket = () => {
-    socket.current = io(SOCKET_SERVER)
+    console.log('🔧 Initializing Socket.IO connection to:', SOCKET_SERVER)
+    
+    socket.current = io(SOCKET_SERVER, {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
+      forceNew: true
+    })
     
     socket.current.on('connect', () => {
-      console.log('🔌 Socket connected')
+      console.log('🔌 Socket connected:', socket.current.id)
+      console.log('🚀 Joining room:', roomId, 'as', userRole)
+      
+      socket.current.emit('join-room', { 
+        roomId, 
+        participantId: userName,
+        role: userRole 
+      })
+    })
+    
+    socket.current.on('connect_error', (error) => {
+      console.error('❌ Socket connection error:', error)
+    })
+    
+    socket.current.on('reconnect', (attemptNumber) => {
+      console.log('🔄 Socket reconnected after', attemptNumber, 'attempts')
+      // Rejoin room after reconnect
       socket.current.emit('join-room', { 
         roomId, 
         participantId: userName,
@@ -1321,12 +1347,14 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
         {/* Video Grid - Dynamic based on participant count */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: participants.length === 0 ? '1fr' : 
-                               participants.length === 1 ? 'repeat(2, 1fr)' :
-                               participants.length <= 3 ? 'repeat(2, 1fr)' :
-                               'repeat(3, 1fr)',
-          gap: '15px',
-          padding: '20px',
+          gridTemplateColumns: window.innerWidth <= 768 
+            ? '1fr' 
+            : (participants.length === 0 ? '1fr' : 
+               participants.length === 1 ? 'repeat(2, 1fr)' :
+               participants.length <= 3 ? 'repeat(2, 1fr)' :
+               'repeat(3, 1fr)'),
+          gap: window.innerWidth <= 768 ? '10px' : '15px',
+          padding: window.innerWidth <= 768 ? '12px' : '20px',
           maxWidth: '1400px',
           margin: '0 auto'
         }}>
@@ -1494,10 +1522,10 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
         <div style={{
           display: 'flex',
           justifyContent: 'center',
-          gap: '12px',
-          padding: '22px',
+          gap: window.innerWidth <= 768 ? '8px' : '12px',
+          padding: window.innerWidth <= 768 ? '14px' : '22px',
           background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-          borderRadius: '16px',
+          borderRadius: window.innerWidth <= 768 ? '12px' : '16px',
           boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
           border: '2px solid rgba(193, 227, 40, 0.25)',
           flexWrap: 'wrap',
@@ -1513,18 +1541,20 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
                 ? 'linear-gradient(135deg, #216147 0%, #2d7a5c 100%)' 
                 : 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
               color: 'white',
-              padding: '13px 26px',
+              padding: window.innerWidth <= 768 ? '10px 16px' : '13px 26px',
               borderRadius: '10px',
               fontWeight: '600',
-              fontSize: '14px',
+              fontSize: window.innerWidth <= 768 ? '12px' : '14px',
               border: isCameraOn ? '2px solid rgba(193, 227, 40, 0.4)' : '2px solid #991b1b',
               boxShadow: isCameraOn 
                 ? '0 4px 14px rgba(33, 97, 71, 0.3)' 
                 : '0 4px 14px rgba(220, 38, 38, 0.3)',
-              transition: 'all 0.3s'
+              transition: 'all 0.3s',
+              flex: window.innerWidth <= 768 ? '1' : 'initial',
+              minWidth: window.innerWidth <= 768 ? '0' : 'auto'
             }}
           >
-            الكاميرا {isCameraOn ? 'مفتوحة' : 'مغلقة'} (مطلوبة)
+            {window.innerWidth <= 768 ? (isCameraOn ? '📹' : '🚫📹') : `الكاميرا ${isCameraOn ? 'مفتوحة' : 'مغلقة'}`}
           </button>
           
           <button 
@@ -1535,18 +1565,20 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
                 ? 'linear-gradient(135deg, #216147 0%, #2d7a5c 100%)' 
                 : 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
               color: 'white',
-              padding: '13px 26px',
+              padding: window.innerWidth <= 768 ? '10px 16px' : '13px 26px',
               borderRadius: '10px',
               fontWeight: '600',
-              fontSize: '14px',
+              fontSize: window.innerWidth <= 768 ? '12px' : '14px',
               border: isMicOn ? '2px solid rgba(193, 227, 40, 0.4)' : '2px solid #991b1b',
               boxShadow: isMicOn 
                 ? '0 4px 14px rgba(33, 97, 71, 0.3)' 
                 : '0 4px 14px rgba(220, 38, 38, 0.3)',
-              transition: 'all 0.3s'
+              transition: 'all 0.3s',
+              flex: window.innerWidth <= 768 ? '1' : 'initial',
+              minWidth: window.innerWidth <= 768 ? '0' : 'auto'
             }}
           >
-            الميكروفون {isMicOn ? 'مفتوح' : 'مغلق'}
+            {window.innerWidth <= 768 ? (isMicOn ? '🎤' : '🚫🎤') : `الميكروفون ${isMicOn ? 'مفتوح' : 'مغلق'}`}
           </button>
           
           <button 
@@ -1556,16 +1588,17 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
             style={{
               background: 'linear-gradient(135deg, #dc3545 0%, #b91c1c 100%)',
               color: 'white',
-              padding: '13px 26px',
+              padding: window.innerWidth <= 768 ? '10px 16px' : '13px 26px',
               borderRadius: '10px',
               fontWeight: '600',
-              fontSize: '14px',
+              fontSize: window.innerWidth <= 768 ? '12px' : '14px',
               border: '2px solid #991b1b',
               boxShadow: '0 4px 14px rgba(220, 53, 69, 0.35)',
-              transition: 'all 0.3s'
+              transition: 'all 0.3s',
+              width: window.innerWidth <= 768 ? '100%' : 'auto'
             }}
           >
-            إنهاء الجلسة {!isChair && '(رئيس الجلسة فقط)'}
+            {window.innerWidth <= 768 ? '⛔ إنهاء' : `إنهاء الجلسة ${!isChair ? '(رئيس الجلسة فقط)' : ''}`}
           </button>
         </div>
 
