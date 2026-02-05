@@ -1249,7 +1249,7 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
         borderBottom: '3px solid #C1E328'
       }}>
         <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', marginBottom: '10px'}}>
-          <img src="/bog-logo.svg" alt="شعار ديوان المظالم" style={{height: '55px', filter: 'brightness(0) invert(1)'}} />
+          <img src="/BOG_Logo.svg" alt="شعار ديوان المظالم" style={{height: '55px', filter: 'brightness(0) invert(1)'}} />
           <h1 style={{margin: 0, fontSize: '2rem', fontWeight: '700'}}>الجلسة القضائية الإلكترونية</h1>
         </div>
         <p style={{margin: 0, opacity: 0.95, fontSize: '1rem'}}>رقم الجلسة: {roomId} | عدد المشاركين: {participants.length + 1}</p>

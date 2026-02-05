@@ -79,7 +79,7 @@ function App() {
         }}>
           <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', marginBottom: '12px' }}>
-              <img src="/bog-logo.svg" alt="شعار ديوان المظالم" style={{ height: '50px', filter: 'brightness(0) invert(1)' }} />
+              <img src="/BOG_Logo.svg" alt="شعار ديوان المظالم" style={{ height: '50px', filter: 'brightness(0) invert(1)' }} />
               <h1 style={{ margin: 0, fontSize: '2rem', fontWeight: '800', color: 'white' }}>ضوابط الجلسات القضائية الإلكترونية</h1>
             </div>
             <p style={{ margin: 0, fontSize: '1rem', color: 'rgba(255,255,255,0.95)', fontWeight: '500' }}>منصة معين الرقمية — ديوان المظالم</p>
@@ -330,7 +330,7 @@ function App() {
         borderBottom: '3px solid #C1E328'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: window.innerWidth <= 768 ? '8px' : '12px', marginBottom: window.innerWidth <= 768 ? '4px' : '8px', flexWrap: 'wrap' }}>
-          <img src="/bog-logo.svg" alt="شعار ديوان المظالم" style={{ height: window.innerWidth <= 768 ? '32px' : '42px', filter: 'brightness(0) invert(1)' }} />
+          <img src="/BOG_Logo.svg" alt="شعار ديوان المظالم" style={{ height: window.innerWidth <= 768 ? '32px' : '42px', filter: 'brightness(0) invert(1)' }} />
           <h1 style={{ margin: 0, fontSize: window.innerWidth <= 768 ? '1.1rem' : '1.5rem', fontWeight: '700', textAlign: 'center' }}>الجلسات القضائية الإلكترونية</h1>
         </div>
         <p style={{ margin: 0, opacity: 0.95, fontSize: window.innerWidth <= 768 ? '0.75rem' : '0.85rem', textAlign: 'center' }}>منصة معين الرقمية — ديوان المظالم</p>

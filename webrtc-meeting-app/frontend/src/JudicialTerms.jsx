@@ -24,7 +24,7 @@ function JudicialTerms({ onAccept, onCancel }) {
         <img 
           src="/BOG_Logo.svg" 
           alt="شعار ديوان المظالم" 
-          style={{ height: '80px', marginBottom: '16px', filter: 'brightness(0) invert(1)' }} 
+          style={{ height: '70px', marginBottom: '16px', filter: 'brightness(0) invert(1)' }} 
         />
         <h1 style={{ 
           margin: '0 0 12px 0', 

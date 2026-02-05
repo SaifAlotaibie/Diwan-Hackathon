@@ -83,7 +83,7 @@ function IdentityVerification({ userName, nationalId, userRole, onVerified, onCa
         borderBottom: '3px solid #C1E328'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '8px' }}>
-          <img src="/bog-logo.svg" alt="شعار ديوان المظالم" style={{ height: '42px', filter: 'brightness(0) invert(1)' }} />
+          <img src="/BOG_Logo.svg" alt="شعار ديوان المظالم" style={{ height: '42px', filter: 'brightness(0) invert(1)' }} />
           <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '700', color: 'white' }}>التحقق من الهوية</h1>
         </div>
         <p style={{ margin: 0, opacity: 0.95, fontSize: '0.85rem', textAlign: 'center', color: 'white' }}>منصة معين الرقمية — ديوان المظالم</p>
