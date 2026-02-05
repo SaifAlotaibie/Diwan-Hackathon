@@ -26,6 +26,10 @@ const fs = require('fs');
 
 console.log("✅ Core modules loaded");
 
+// Initialize OpenAI
+const OpenAI = require('openai');
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
 const { SESSION_RULES, validateArabicName, validateNationalId, validateMobile } = require('./session-rules');
 
 // Check for required environment variables BEFORE requiring modules that need them

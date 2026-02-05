@@ -12,6 +12,7 @@ function App() {
   const [showVerification, setShowVerification] = useState(false)
   const [error, setError] = useState('')
   const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [showTermsPage, setShowTermsPage] = useState(true) // Show terms first
 
   // Validate Arabic name (at least 3 parts)
   const validateArabicName = (name) => {
@@ -54,18 +55,250 @@ function App() {
     }
     
     setError('')
+    // Show identity verification after data validation
     setShowVerification(true)
   }
 
-  // Show identity verification screen
+  // Show Terms & Conditions Page First
+  if (showTermsPage) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
+        {/* Header */}
+        <div style={{
+          background: 'linear-gradient(135deg, #216147 0%, #2d7a5c 100%)',
+          padding: '24px 20px',
+          borderBottom: '4px solid #C1E328',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+        }}>
+          <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', marginBottom: '12px' }}>
+              <img src="/bog-logo.svg" alt="شعار ديوان المظالم" style={{ height: '50px', filter: 'brightness(0) invert(1)' }} />
+              <h1 style={{ margin: 0, fontSize: '2rem', fontWeight: '800', color: 'white' }}>ضوابط الجلسات القضائية الإلكترونية</h1>
+            </div>
+            <p style={{ margin: 0, fontSize: '1rem', color: 'rgba(255,255,255,0.95)', fontWeight: '500' }}>منصة معين الرقمية — ديوان المظالم</p>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div style={{ 
+          flex: 1, 
+          maxWidth: '900px', 
+          margin: '0 auto', 
+          padding: '30px 20px',
+          width: '100%'
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '16px',
+            padding: '40px',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.12)',
+            border: '3px solid #C1E328'
+          }}>
+            {/* Introduction */}
+            <div style={{ 
+              textAlign: 'center', 
+              marginBottom: '35px',
+              paddingBottom: '25px',
+              borderBottom: '2px solid #e0e0e0'
+            }}>
+              <h2 style={{ 
+                fontSize: '1.8rem', 
+                fontWeight: '800', 
+                color: '#216147',
+                marginBottom: '12px'
+              }}>
+                شروط وضوابط حضور الجلسات القضائية الإلكترونية
+              </h2>
+              <p style={{ 
+                fontSize: '1.05rem', 
+                color: '#6c757d', 
+                lineHeight: '1.7',
+                maxWidth: '700px',
+                margin: '0 auto'
+              }}>
+                يُرجى قراءة الشروط التالية بعناية. <strong style={{ color: '#216147' }}>جميع الشروط إلزامية</strong> ويجب الالتزام بها طوال الجلسة.
+              </p>
+            </div>
+
+            {/* Terms Grid */}
+            <div style={{ display: 'grid', gap: '20px', marginBottom: '35px' }}>
+              {/* Term 1: Camera */}
+              <div style={{
+                background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                border: '2px solid #e0e0e0',
+                borderRadius: '12px',
+                padding: '24px',
+                transition: 'all 0.3s'
+              }}>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: '700', color: '#216147', margin: '0 0 10px 0' }}>
+                  ١. سياسة الكاميرا
+                </h3>
+                <p style={{ fontSize: '1rem', color: '#495057', lineHeight: '1.7', margin: 0 }}>
+                  يجب على <strong>جميع المشاركين</strong> (القضاة، أمين السر، الأطراف، المحامين) إبقاء الكاميرا <strong style={{ color: '#d32f2f' }}>مفتوحة طوال الجلسة</strong>. عند إيقافها، سيتم إشعار رئيس الجلسة فوراً وإصدار تنبيه رسمي.
+                </p>
+              </div>
+
+              {/* Term 2: Identity */}
+              <div style={{
+                background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                border: '2px solid #e0e0e0',
+                borderRadius: '12px',
+                padding: '24px',
+                transition: 'all 0.3s'
+              }}>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: '700', color: '#216147', margin: '0 0 10px 0' }}>
+                  ٢. سياسة الهوية والتسمية
+                </h3>
+                <p style={{ fontSize: '1rem', color: '#495057', lineHeight: '1.7', margin: 0 }}>
+                  يجب إدخال <strong>الاسم الثلاثي الكامل بالعربي</strong> (مثال: محمد أحمد عبدالله). سيتم التحقق من الهوية عبر <strong style={{ color: '#216147' }}>الذكاء الاصطناعي</strong> قبل الدخول للجلسة.
+                </p>
+              </div>
+
+              {/* Term 3: Environment */}
+              <div style={{
+                background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                border: '2px solid #e0e0e0',
+                borderRadius: '12px',
+                padding: '24px',
+                transition: 'all 0.3s'
+              }}>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: '700', color: '#216147', margin: '0 0 10px 0' }}>
+                  ٣. ملاءمة بيئة الحضور
+                </h3>
+                <p style={{ fontSize: '1rem', color: '#495057', lineHeight: '1.7', margin: 0 }}>
+                  يجب الحضور من <strong>بيئة رسمية ومهنية</strong>. يُمنع الحضور أثناء القيادة أو المشي أو في الأماكن العامة. النظام يراقب البيئة بالذكاء الاصطناعي وينبه رئيس الجلسة عند اكتشاف أي مخالفة.
+                </p>
+              </div>
+
+              {/* Term 4: Dress Code */}
+              <div style={{
+                background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                border: '2px solid #e0e0e0',
+                borderRadius: '12px',
+                padding: '24px',
+                transition: 'all 0.3s'
+              }}>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: '700', color: '#216147', margin: '0 0 10px 0' }}>
+                  ٤. الزي الرسمي
+                </h3>
+                <p style={{ fontSize: '1rem', color: '#495057', lineHeight: '1.7', margin: '0 0 10px 0' }}>
+                  <strong>• القضاة والمحامون:</strong> الزي القضائي الرسمي (البشت الأسود)
+                </p>
+                <p style={{ fontSize: '1rem', color: '#495057', lineHeight: '1.7', margin: 0 }}>
+                  <strong>• المشاركون:</strong> الزي السعودي الرسمي (ثوب + شماغ أو غترة مع العقال)
+                </p>
+              </div>
+
+              {/* Term 5: Authority */}
+              <div style={{
+                background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                border: '2px solid #e0e0e0',
+                borderRadius: '12px',
+                padding: '24px',
+                transition: 'all 0.3s'
+              }}>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: '700', color: '#216147', margin: '0 0 10px 0' }}>
+                  ٥. صلاحيات رئيس الجلسة
+                </h3>
+                <p style={{ fontSize: '1rem', color: '#495057', lineHeight: '1.7', margin: 0 }}>
+                  <strong>رئيس الجلسة فقط</strong> له صلاحية إدارة الجلسة، فتحها وإغلاقها، توجيه النقاش، وإدارة المحاضر. الأعضاء الآخرون يمكنهم طرح الأسئلة <strong>فقط عند التفويض</strong>.
+                </p>
+              </div>
+
+              {/* Term 6: Recording */}
+              <div style={{
+                background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                border: '2px solid #e0e0e0',
+                borderRadius: '12px',
+                padding: '24px',
+                transition: 'all 0.3s'
+              }}>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: '700', color: '#216147', margin: '0 0 10px 0' }}>
+                  ٦. تسجيل الجلسة
+                </h3>
+                <p style={{ fontSize: '1rem', color: '#495057', lineHeight: '1.7', margin: 0 }}>
+                  التسجيل <strong style={{ color: '#d32f2f' }}>نشط تلقائياً</strong> ولا يمكن إيقافه حتى حفظ المحضر وتأكيد رئيس الجلسة. رئيس الجلسة <strong>لا يمكنه المغادرة</strong> قبل حفظ وتأكيد المحضر.
+                </p>
+              </div>
+            </div>
+
+            {/* Warning Box */}
+            <div style={{
+              background: 'linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%)',
+              border: '3px solid #ffc107',
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '25px'
+            }}>
+              <p style={{ 
+                margin: 0, 
+                fontSize: '1.05rem', 
+                color: '#856404', 
+                textAlign: 'center',
+                lineHeight: '1.7',
+                fontWeight: '600'
+              }}>
+                ⚠️ <strong>تنبيه مهم:</strong> جميع الشروط المذكورة أعلاه <strong>إلزامية وغير قابلة للتفاوض</strong>. أي مخالفة سيتم رصدها تلقائياً وإبلاغ رئيس الجلسة بها.
+              </p>
+            </div>
+
+            {/* Accept Button */}
+            <button 
+              onClick={() => {
+                setShowTermsPage(false)
+                // Go to lobby to fill data first
+              }}
+              style={{
+                width: '100%',
+                fontSize: '1.2rem',
+                fontWeight: '800',
+                padding: '18px',
+                background: 'linear-gradient(135deg, #216147 0%, #2d7a5c 100%)',
+                color: 'white',
+                border: '3px solid #C1E328',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                boxShadow: '0 6px 20px rgba(33, 97, 71, 0.4)',
+                transition: 'all 0.3s',
+                fontFamily: 'Tajawal, sans-serif'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-2px)'
+                e.target.style.boxShadow = '0 8px 25px rgba(33, 97, 71, 0.5)'
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)'
+                e.target.style.boxShadow = '0 6px 20px rgba(33, 97, 71, 0.4)'
+              }}
+            >
+              ✅ قرأت وأوافق على جميع الشروط - المتابعة للانضمام
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show identity verification screen (Demo mode for presentation)
   if (showVerification && !joined) {
     return (
       <IdentityVerification
-        userName={displayName}
-        nationalId={nationalId}
+        userName={displayName || 'مشارك'}
+        nationalId={nationalId || '1000000000'}
         userRole={userRole}
-        onVerified={() => setJoined(true)}
-        onCancel={() => setShowVerification(false)}
+        onVerified={() => {
+          setShowVerification(false)
+          setJoined(true) // Go directly to session after successful verification
+        }}
+        onCancel={() => {
+          setShowVerification(false)
+          // Go back to lobby (data entry page) if cancelled
+        }}
       />
     )
   }
@@ -203,6 +436,8 @@ function App() {
             }}
           >
             <option value="chair">رئيس الجلسة</option>
+            <option value="judge">قاضي</option>
+            <option value="lawyer">محامي</option>
             <option value="secretary">أمين السر</option>
             <option value="party">طرف معني</option>
             <option value="participant">مشارك</option>

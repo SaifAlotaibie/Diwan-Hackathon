@@ -121,10 +121,10 @@ REQUIRED FORMAT (strict JSON):
     } catch (parseErr) {
       console.log('⚠️ Direct parse failed, trying to extract JSON...');
       // Fallback: Extract JSON from response
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
         console.error('❌ No JSON found in response');
-        throw new Error('Invalid response format from Vision API');
+      throw new Error('Invalid response format from Vision API');
       }
       result = JSON.parse(jsonMatch[0]);
     }
@@ -166,7 +166,7 @@ function applyDressCodeRule(visionResult, role) {
     if (!bisht) {
       warnings.push({
         type: 'bisht',
-        message: '🎓 تنبيه هام: البشت القضائي مطلوب\n\nيجب ارتداء البشت (العباءة القضائية) السوداء فوق الثوب\n\nهذا جزء أساسي من الزي القضائي الرسمي',
+        message: 'تنبيه هام: البشت القضائي مطلوب\n\nيجب ارتداء البشت (العباءة القضائية) السوداء فوق الثوب\n\nهذا جزء أساسي من الزي القضائي الرسمي',
         severity: 'high',
         item: 'بشت/عباءة قضائية'
       });
@@ -176,7 +176,7 @@ function applyDressCodeRule(visionResult, role) {
     if (!shemagh_or_ghutra) {
       warnings.push({
         type: 'headwear',
-        message: '👳 تنبيه: غطاء الرأس مطلوب\n\nيجب ارتداء الشماغ (أحمر/أبيض) أو الغترة (بيضاء) مع العقال\n\nوفقاً لقواعد الجلسات القضائية',
+        message: 'تنبيه: غطاء الرأس مطلوب\n\nيجب ارتداء الشماغ (أحمر/أبيض) أو الغترة (بيضاء) مع العقال\n\nوفقاً لقواعد الجلسات القضائية',
         severity: 'high',
         item: 'شماغ أو غترة'
       });
@@ -186,7 +186,7 @@ function applyDressCodeRule(visionResult, role) {
     if (!thobe) {
       warnings.push({
         type: 'thobe',
-        message: '👔 تنبيه: الثوب الرسمي مطلوب',
+        message: 'تنبيه: الثوب الرسمي مطلوب',
         severity: 'high',
         item: 'ثوب'
       });
@@ -194,7 +194,7 @@ function applyDressCodeRule(visionResult, role) {
     
     if (warnings.length > 0) {
       console.log('⚠️ Dress code not compliant. Warnings:', warnings.length);
-      return {
+    return {
         compliant: false,
         warnings: warnings, // ✅ إرجاع تنبيهات متعددة
         warning: warnings[0].message, // للتوافق مع الكود القديم
@@ -211,7 +211,7 @@ function applyDressCodeRule(visionResult, role) {
     if (!shemagh_or_ghutra) {
       warnings.push({
         type: 'headwear',
-        message: '👳 تنبيه: غطاء الرأس مطلوب\n\nيجب ارتداء الشماغ (أحمر/أبيض) أو الغترة (بيضاء) مع العقال\n\nالزي السعودي الرسمي إلزامي في الجلسات القضائية',
+        message: 'تنبيه: غطاء الرأس مطلوب\n\nيجب ارتداء الشماغ (أحمر/أبيض) أو الغترة (بيضاء) مع العقال\n\nالزي السعودي الرسمي إلزامي في الجلسات القضائية',
         severity: 'high',
         item: 'شماغ أو غترة'
       });
@@ -221,7 +221,7 @@ function applyDressCodeRule(visionResult, role) {
     if (!thobe) {
       warnings.push({
         type: 'thobe',
-        message: '👔 تنبيه: الثوب السعودي الرسمي مطلوب\n\nيجب ارتداء الثوب الأبيض أو البيج',
+        message: 'تنبيه: الثوب السعودي الرسمي مطلوب\n\nيجب ارتداء الثوب الأبيض أو البيج',
         severity: 'high',
         item: 'ثوب'
       });
@@ -229,8 +229,8 @@ function applyDressCodeRule(visionResult, role) {
     
     if (warnings.length > 0) {
       console.log('⚠️ Dress code not compliant. Warnings:', warnings.length);
-      return {
-        compliant: false,
+    return {
+      compliant: false,
         warnings: warnings, // ✅ إرجاع تنبيهات متعددة
         warning: warnings[0].message, // للتوافق مع الكود القديم
         missingItems: warnings.map(w => w.item),

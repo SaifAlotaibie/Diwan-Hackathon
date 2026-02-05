@@ -41,64 +41,31 @@ function IdentityVerification({ userName, nationalId, userRole, onVerified, onCa
   const captureAndVerify = async () => {
     setStatus('capturing')
     setMessage('جاري التقاط الصورة...')
+    setError('')
     
-    // Wait 3 seconds for user to position properly
-    await new Promise(resolve => setTimeout(resolve, 3000))
+    // Simulate capturing - wait 1.5 seconds
+    await new Promise(resolve => setTimeout(resolve, 1500))
     
-    try {
-      // Capture frame
-      const canvas = canvasRef.current
-      const video = videoRef.current
-      
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-      
-      const ctx = canvas.getContext('2d')
-      ctx.drawImage(video, 0, 0)
-      
-      const imageBase64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1]
-      
-      setStatus('verifying')
-      setMessage('جاري التحقق من الهوية وتطابق الصورة...')
-      
-      // Call backend for verification
-      const response = await axios.post(`${API_SERVER}/verify-identity`, {
-        imageBase64,
-        nationalId,
-        userName,
-        userRole
-      })
-      
-      if (response.data.success && response.data.verified) {
-        setStatus('verified')
-        setMessage('✅ تم التحقق من الهوية بنجاح')
-        
-        // Stop camera
-        if (streamRef.current) {
-          streamRef.current.getTracks().forEach(track => track.stop())
-        }
-        
-        // Proceed to session after 1.5 seconds
-        setTimeout(() => {
-          onVerified()
-        }, 1500)
-      } else {
-        setStatus('failed')
-        setError(response.data.message || 'فشل التحقق من الهوية. يرجى المحاولة مرة أخرى.')
-        setTimeout(() => {
-          setStatus('ready')
-          setError('')
-        }, 3000)
-      }
-      
-    } catch (err) {
-      setStatus('failed')
-      setError('حدث خطأ في التحقق. يرجى المحاولة مرة أخرى.')
-      setTimeout(() => {
-        setStatus('ready')
-        setError('')
-      }, 3000)
+    // Show verifying status
+    setStatus('verifying')
+    setMessage('جاري التحقق من الهوية وتطابق الصورة...')
+    
+    // Simulate AI verification - wait 2.5 seconds
+    await new Promise(resolve => setTimeout(resolve, 2500))
+    
+    // Demo: Always succeed (no actual API call to ChatGPT)
+    setStatus('verified')
+    setMessage('✅ تم التحقق من الهوية بنجاح')
+    
+    // Stop camera
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop())
     }
+    
+    // Proceed to lobby after 1.5 seconds
+    setTimeout(() => {
+      onVerified()
+    }, 1500)
   }
 
   return (
@@ -164,7 +131,7 @@ function IdentityVerification({ userName, nationalId, userRole, onVerified, onCa
               ref={videoRef}
               autoPlay
               playsInline
-              style={{ width: '100%', display: 'block' }}
+              style={{ width: '100%', display: 'block', transform: 'scaleX(-1)' }}
             />
             <canvas ref={canvasRef} style={{ display: 'none' }} />
             

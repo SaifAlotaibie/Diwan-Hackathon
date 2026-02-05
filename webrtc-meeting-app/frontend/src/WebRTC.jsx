@@ -51,6 +51,9 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
   const [dressCodeWarning, setDressCodeWarning] = useState(null)
   const [lastDressCodeCheck, setLastDressCodeCheck] = useState(0)
   
+  // Camera Off Warning state
+  const [cameraOffWarning, setCameraOffWarning] = useState(false)
+  
   // Refs
   const socket = useRef(null)
   const localStream = useRef(null)
@@ -71,11 +74,9 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
     initializeMedia()
     initializeSocket()
     
-    // Start dress code checking for lawyers only
-    if (userRole === 'lawyer') {
-      console.log('👔 Starting dress code monitoring for lawyer')
+    // Start dress code checking for ALL participants (judicial requirement)
+    console.log('👔 Starting dress code monitoring for', userRole)
       startDressCodeMonitoring()
-    }
     
     return () => {
       cleanup()
@@ -597,17 +598,32 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
   const toggleCamera = () => {
     if (localStream.current) {
       const videoTrack = localStream.current.getVideoTracks()[0]
-      if (videoTrack && !videoTrack.enabled) {
-        videoTrack.enabled = true
-        setIsCameraOn(true)
-        return
-      }
-      if (videoTrack && videoTrack.enabled) {
-        alert('شروط الجلسات القضائية: يلزم إبقاء الكاميرا مفتوحة طوال مدة الجلسة ولا يُسمح بإغلاقها.')
-        return
-      }
       if (videoTrack) {
-        console.log('📹 Camera ON (مطلوبة)')
+        // Toggle camera state (allow user to turn off)
+        videoTrack.enabled = !videoTrack.enabled
+        setIsCameraOn(videoTrack.enabled)
+        
+        console.log(`📹 Camera ${videoTrack.enabled ? 'ON' : 'OFF'}`)
+        
+        // If camera is turned OFF, show violation warning
+        if (!videoTrack.enabled) {
+          // Show warning banner
+          setCameraOffWarning(true)
+          
+          // Emit socket event to notify all participants
+          if (socket.current) {
+            socket.current.emit('camera-off-detected', {
+              roomId,
+              participantId: userName,
+              role: userRole,
+              timestamp: new Date().toISOString()
+            })
+            console.log('🚨 Camera turned OFF - violation emitted')
+          }
+        } else {
+          // Camera turned back ON - hide warning
+          setCameraOffWarning(false)
+        }
       } else {
         console.warn('⚠️ No video track found')
       }
@@ -752,12 +768,12 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
   }
 
   const performDressCodeCheck = async () => {
-    // Only check for lawyers
-    if (userRole !== 'lawyer') return
+    // Check for ALL participants (judicial requirement)
+    console.log('👔 performDressCodeCheck called for role:', userRole)
     
-    // Don't spam checks (minimum 60 seconds between warnings)
+    // Don't spam checks (minimum 20 seconds between warnings)
     const now = Date.now()
-    if (now - lastDressCodeCheck < 60000) {
+    if (now - lastDressCodeCheck < 20000) {
       return
     }
     
@@ -1216,33 +1232,87 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
       <div className="meeting">
         {error && <div className="error">{error}</div>}
         
-        {/* Dress Code Warning (Lawyers Only - MVP Feature) */}
-        {dressCodeWarning && userRole === 'lawyer' && (
+        {/* Camera Off Warning (Judicial Violation) */}
+        {cameraOffWarning && (
           <div style={{
             position: 'fixed',
             top: '20px',
             left: '50%',
             transform: 'translateX(-50%)',
-            background: 'linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)',
-            color: '#000',
-            padding: '15px 25px',
-            borderRadius: '12px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            zIndex: 9999,
+            background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+            border: '4px solid #dc2626',
+            borderRadius: '16px',
+            padding: '20px 25px',
+            boxShadow: '0 8px 30px rgba(220, 38, 38, 0.5)',
+            zIndex: 2001,
             maxWidth: '500px',
-            textAlign: 'center',
-            animation: 'fadeIn 0.3s ease-in',
-            border: '2px solid #daa520'
+            width: '90%',
+            animation: 'slideDown 0.3s ease-out'
           }}>
-            <div style={{display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center'}}>
-              <span style={{fontSize: '24px'}}>👔</span>
+            <div style={{textAlign: 'right'}}>
+              <div style={{fontWeight: '800', fontSize: '18px', marginBottom: '12px', color: '#991b1b'}}>
+                مخالفة: الكاميرا مغلقة
+              </div>
+              <div style={{fontSize: '15px', lineHeight: '1.8', color: '#991b1b', fontWeight: '600'}}>
+                تنبيه: يجب إبقاء الكاميرا مفتوحة طوال مدة الجلسة
+              </div>
+              <div style={{
+                marginTop: '15px',
+                padding: '12px',
+                background: 'rgba(255, 255, 255, 0.7)',
+                borderRadius: '8px',
+                fontSize: '13px',
+                color: '#991b1b',
+                fontWeight: '700'
+              }}>
+                وفقاً لشروط الجلسات القضائية الإلكترونية
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Dress Code Warning (ALL Participants - Judicial Requirement) */}
+        {dressCodeWarning && (
+          <div style={{
+            position: 'fixed',
+            top: '80px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%)',
+            border: '4px solid #ffc107',
+            borderRadius: '16px',
+            padding: '20px 25px',
+            boxShadow: '0 8px 30px rgba(255, 193, 7, 0.5)',
+            zIndex: 2000,
+            maxWidth: '500px',
+            width: '90%',
+            animation: 'slideDown 0.3s ease-out'
+          }}>
               <div style={{textAlign: 'right'}}>
-                <div style={{fontWeight: 'bold', fontSize: '14px', marginBottom: '5px'}}>
-                  تنبيه اللباس النظامي
+              <div style={{fontWeight: '800', fontSize: '18px', marginBottom: '12px', color: '#856404'}}>
+                مخالفة اللباس الرسمي
                 </div>
-                <div style={{fontSize: '13px'}}>
-                  {dressCodeWarning}
+              <div style={{fontSize: '15px', lineHeight: '1.8', color: '#856404', fontWeight: '600'}}>
+                {Array.isArray(dressCodeWarning) ? (
+                  dressCodeWarning.map((warning, index) => (
+                    <div key={index} style={{ marginBottom: '10px', paddingBottom: '10px', borderBottom: index < dressCodeWarning.length - 1 ? '1px solid rgba(133, 100, 4, 0.2)' : 'none' }}>
+                      {warning.message}
                 </div>
+                  ))
+                ) : (
+                  <div>{dressCodeWarning}</div>
+                )}
+              </div>
+              <div style={{
+                marginTop: '15px',
+                padding: '12px',
+                background: 'rgba(255, 255, 255, 0.7)',
+                borderRadius: '8px',
+                fontSize: '13px',
+                color: '#856404',
+                fontWeight: '700'
+              }}>
+                يرجى الالتزام باللباس الرسمي المطلوب للجلسات القضائية
               </div>
             </div>
           </div>
@@ -1275,7 +1345,7 @@ function WebRTCMeeting({ roomId, userName, userRole = 'party', isChair = false, 
               autoPlay 
               muted 
               playsInline 
-              style={{width: '100%', height: '100%', objectFit: 'cover'}}
+              style={{width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)'}}
             />
             <div style={{
               position: 'absolute',
