@@ -74,7 +74,14 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "*",
+    origin: [
+      "http://localhost:8080",
+      "http://localhost:5173",
+      "https://diwan-hackathon-aejfaa.cranl.net", // Frontend React
+      "https://diwan-hackathon-ufadil.cranl.net",  // Static Site
+      "https://diwan-hackathon-twhmyk.cranl.net",  // Backend domain (not used but kept)
+      "*" // Allow all for development (remove in production if needed)
+    ],
     methods: ["GET", "POST"],
     credentials: true
   },
@@ -83,7 +90,16 @@ const io = socketIo(server, {
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:8080",
+    "http://localhost:5173",
+    "https://diwan-hackathon-aejfaa.cranl.net", // Frontend React
+    "https://diwan-hackathon-ufadil.cranl.net",  // Static Site
+    "*" // Allow all for development
+  ],
+  credentials: true
+}));
 app.use(express.json({ limit: '50mb' })); // ✅ زيادة الحد للصور
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
