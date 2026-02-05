@@ -77,10 +77,10 @@ const io = socketIo(server, {
     origin: [
       "http://localhost:8080",
       "http://localhost:5173",
+      "http://localhost:8888",  // Local test server
       "https://diwan-hackathon-aejfaa.cranl.net", // Frontend React
       "https://diwan-hackathon-ufadil.cranl.net",  // Static Site
-      "https://diwan-hackathon-twhmyk.cranl.net",  // Backend domain (not used but kept)
-      "*" // Allow all for development (remove in production if needed)
+      "https://breezelike-intuitively-zenia.ngrok-free.dev" // ngrok URL
     ],
     methods: ["GET", "POST"],
     credentials: true
@@ -94,9 +94,10 @@ app.use(cors({
   origin: [
     "http://localhost:8080",
     "http://localhost:5173",
+    "http://localhost:8888",  // Local test server
     "https://diwan-hackathon-aejfaa.cranl.net", // Frontend React
     "https://diwan-hackathon-ufadil.cranl.net",  // Static Site
-    "*" // Allow all for development
+    "https://breezelike-intuitively-zenia.ngrok-free.dev" // ngrok URL
   ],
   credentials: true
 }));
